@@ -1,0 +1,1832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="theme-color" content="#7A9E8A">
+<title>Daily Devotion</title>
+<link rel="manifest" href="manifest.json">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=EB+Garamond:ital,wght@0,400;1,400&family=Jost:wght@300;400&display=swap" rel="stylesheet">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
+:root{
+  --cream:#F5F0E8;--sage:#7A9E8A;--gold:#B8965A;--rose:#C4827A;--earth:#6B5E4E;
+  --ink:#3D3328;--stone:#9A8F7E;--bark:#7A6E5F;--linen:#E8E0D0;
+  --sage-xl:#EEF4F1;
+}
+html,body{height:100%;background:var(--cream);}
+body{font-family:'Jost',sans-serif;color:var(--ink);}
+#app{display:flex;flex-direction:column;height:100dvh;max-width:500px;margin:0 auto;background:var(--cream);}
+#header{padding:18px 18px 10px;flex-shrink:0;}
+.htop{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:3px;text-transform:uppercase;color:var(--stone);display:flex;justify-content:space-between;align-items:center;}
+.hdate{font-family:'Playfair Display',serif;font-size:28px;font-weight:400;color:var(--ink);margin-top:4px;}
+.hdiv{height:1px;background:linear-gradient(90deg,var(--linen),transparent);margin-top:10px;}
+.lang-toggle{display:flex;border-radius:20px;overflow:hidden;border:1.5px solid var(--linen);}
+.lbtn{padding:6px 14px;font-family:'Jost',sans-serif;font-size:11px;font-weight:400;cursor:pointer;border:none;background:transparent;color:var(--stone);transition:all .2s;}
+.lbtn.active{background:var(--sage);color:#fff;}
+#content{flex:1;overflow-y:auto;padding:14px 16px 90px;-webkit-overflow-scrolling:touch;scrollbar-width:none;}
+#content::-webkit-scrollbar{display:none;}
+.tab{display:none;}
+.tab.active{display:block;animation:fadeUp .35s ease;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.card{background:#fff;border:1px solid var(--linen);border-radius:16px;padding:18px;margin-bottom:14px;box-shadow:0 2px 10px rgba(61,51,40,.05);}
+.card.verse-card{background:linear-gradient(145deg,#FFFDF9,#FAF6EE);border-color:#D4C9B4;}
+.clabel{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2.5px;text-transform:uppercase;color:var(--stone);margin-bottom:10px;}
+.clabel.gold{color:var(--gold);}
+.clabel.sage{color:var(--sage);}
+.clabel.rose{color:var(--rose);}
+.vtext{font-family:'Playfair Display',Georgia,serif;font-size:20px;font-style:italic;line-height:1.65;color:var(--ink);margin:10px 0;min-height:24px;}
+.vref{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;}
+#refl-area{display:none;margin-top:14px;border-top:1px solid var(--linen);padding-top:14px;}
+#refl-area.show{display:block;}
+.rtext{font-family:'EB Garamond',Georgia,serif;font-size:17px;line-height:1.75;color:var(--earth);min-height:20px;}
+.ornament{text-align:center;color:var(--linen);font-size:18px;margin:8px 0;}
+.btn{padding:11px 22px;border:none;border-radius:20px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;transition:all .2s;width:100%;margin-top:12px;}
+.btn-sage{background:var(--sage);color:#fff;}
+.btn-sage:active{opacity:.85;}
+.btn-ghost{background:transparent;border:1.5px solid var(--linen);color:var(--bark);}
+.sage-card{background:var(--sage-xl);border-color:var(--sage);border-color:#C8DDD4;}
+.shigh{display:flex;align-items:center;gap:14px;margin-top:8px;}
+.sbig{font-family:'Playfair Display',serif;font-size:28px;color:var(--gold);}
+.week-row{display:flex;gap:6px;margin-top:12px;}
+.wday{flex:1;text-align:center;}
+.wday-label{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--stone);text-transform:uppercase;}
+.wday-dot{width:28px;height:28px;border-radius:50%;background:var(--linen);margin:4px auto 0;display:flex;align-items:center;justify-content:center;font-size:12px;}
+.wday-dot.done{background:var(--sage);color:#fff;}
+.wday-dot.today{border:2px solid var(--sage);}
+.qcard{background:var(--cream);border-radius:10px;padding:12px 14px;margin-top:8px;}
+/* WRITE */
+.verse-input-wrap{background:#FDFAF6;border:1.5px solid var(--linen);border-radius:14px;overflow:hidden;transition:border-color .2s;}
+.verse-input-wrap:focus-within{border-color:var(--sage);}
+.verse-ref-row{display:flex;gap:0;border-bottom:1px solid var(--linen);}
+.vsel{flex:1;background:transparent;border:none;border-right:1px solid var(--linen);color:var(--ink);font-family:'Jost',sans-serif;font-size:12px;padding:9px 8px;outline:none;cursor:pointer;-webkit-appearance:none;text-align:center;}
+.vsel:last-child{border-right:none;}
+.vsel:focus{background:var(--sage-xl);}
+.jref-display{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);padding:8px 14px 0;min-height:0;transition:all .2s;}
+.jref-display.has-ref{padding:8px 14px 4px;}
+.jverse-display{min-height:60px;padding:10px 14px 14px;font-family:'EB Garamond',serif;font-size:18px;font-style:italic;color:var(--ink);line-height:1.7;outline:none;overflow-y:auto;max-height:220px;}
+.jverse-display:empty:before{content:attr(data-placeholder);color:var(--stone);font-style:italic;}
+.verse-selected-display{padding:4px 0;}
+.verse-selected-num{font-size:11px;color:var(--sage);font-family:'Jost',sans-serif;vertical-align:super;margin-right:4px;font-style:normal;}
+.verse-selected-text{font-family:'EB Garamond',serif;font-size:19px;font-style:italic;color:var(--ink);line-height:1.7;}
+.verse-change-hint{font-family:'Jost',sans-serif;font-size:10px;color:var(--sage);cursor:pointer;margin-top:10px;letter-spacing:.5px;}
+.verse-change-hint:hover{text-decoration:underline;}
+.verse-picker-label{font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px;}
+/* Multi-verse rows */
+.verse-row-card{background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;margin-bottom:8px;position:relative;}
+.verse-row-selects{display:flex;gap:6px;align-items:center;flex-wrap:wrap;}
+.verse-row-selects .vsel{flex:1;min-width:80px;}
+.verse-row-del{position:absolute;top:10px;right:10px;background:none;border:none;color:var(--stone);font-size:15px;cursor:pointer;padding:0 4px;}
+.verse-row-del:hover{color:#c0392b;}
+.verse-row-range{display:flex;align-items:center;gap:6px;margin-top:8px;}
+.verse-row-range .vsel{flex:1;}
+.verse-row-range-label{font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);white-space:nowrap;}
+.verse-row-picker{margin-top:8px;max-height:160px;overflow-y:auto;background:#fff;border-radius:8px;padding:8px;}
+.verse-row-selected-display{margin-top:8px;font-family:'EB Garamond',serif;font-size:16px;font-style:italic;color:var(--ink);line-height:1.6;padding:6px 8px;background:rgba(122,158,138,.08);border-radius:8px;}
+.verse-row-ref-tag{font-family:'Jost',sans-serif;font-size:9px;color:var(--sage);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px;}
+.verse-change-link{font-family:'Jost',sans-serif;font-size:10px;color:var(--sage);cursor:pointer;display:inline-block;margin-top:6px;}
+.verse-change-link:hover{text-decoration:underline;}
+.add-verse-row-btn{width:100%;padding:10px;border:1.5px dashed var(--sage);border-radius:10px;background:transparent;color:var(--sage);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;margin-bottom:10px;transition:all .2s;}
+.add-verse-row-btn:hover{background:rgba(122,158,138,.08);}
+/* Reflection guide */
+.reflection-guide{margin-bottom:8px;}
+.rg-hint{font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);letter-spacing:.3px;}
+.rg-chip{display:inline-block;padding:3px 10px;background:rgba(122,158,138,.15);border-radius:20px;color:var(--sage);cursor:pointer;margin:2px;font-size:10px;letter-spacing:.5px;transition:background .15s;}
+.rg-chip:hover{background:rgba(122,158,138,.3);}
+.jverse-display:empty:before{content:attr(data-placeholder);color:var(--stone);font-style:italic;}
+.verse-loading{padding:14px;text-align:center;color:var(--stone);font-family:'Jost',sans-serif;font-size:12px;}
+.vbtn.ai-tl{color:var(--sage);font-weight:500;}
+.vbtn.ai-tl.loading{opacity:.5;pointer-events:none;}
+.ai-tl-badge{display:inline-block;background:var(--sage-xl);color:var(--sage);font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;padding:2px 7px;border-radius:8px;margin-left:6px;vertical-align:middle;}
+.ai-prayer-section{margin-top:22px;padding-top:18px;border-top:1px solid var(--linen);}
+.ai-prayer-row{display:flex;gap:8px;margin-bottom:12px;}
+.acts-guide{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+.acts-section{background:#FDFAF6;border:1.5px solid var(--linen);border-radius:14px;padding:14px 16px;}
+.acts-header{display:flex;align-items:flex-start;gap:12px;margin-bottom:10px;}
+.acts-letter{font-family:'EB Garamond',serif;font-size:32px;font-weight:700;line-height:1;flex-shrink:0;}
+.acts-title{font-family:'Jost',sans-serif;font-size:12px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);}
+.acts-sub{font-family:'Jost',sans-serif;font-size:11px;color:var(--stone);margin-top:2px;line-height:1.4;}
+.acts-editor{min-height:64px;font-family:'EB Garamond',serif;font-size:16px;line-height:1.7;color:var(--ink);outline:none;padding:4px 2px;}
+.acts-editor:empty:before{content:attr(data-placeholder);color:var(--stone);font-style:italic;pointer-events:none;}
+.acts-toolbar{display:flex;align-items:center;gap:6px;margin-top:10px;padding:8px 12px;background:#F5F0EA;border-radius:10px;}
+.acts-toolbar-hint{font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);margin-left:auto;}
+.prayer-date-label{font-family:'Jost',sans-serif;font-size:11px;color:var(--stone);letter-spacing:.5px;margin-bottom:14px;}
+.saved-prayer-card{background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+.saved-prayer-date{font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);letter-spacing:.5px;margin-bottom:6px;}
+.saved-prayer-preview{font-family:'EB Garamond',serif;font-size:15px;color:var(--ink);line-height:1.6;white-space:pre-wrap;}
+.saved-prayer-del{float:right;background:none;border:none;color:var(--stone);font-size:16px;cursor:pointer;padding:0;}
+.ai-pray-btn{background:var(--gold)!important;font-size:14px!important;}
+.ai-prayer-box{background:var(--sage-xl);border-radius:14px;padding:16px;margin-top:4px;}
+.ai-prayer-text{font-family:'EB Garamond',serif;font-size:17px;line-height:1.8;color:var(--ink);white-space:pre-wrap;}
+.ai-prayer-copy{margin-top:12px;background:transparent;border:1px solid var(--sage);color:var(--sage);border-radius:10px;padding:6px 16px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;}
+.ai-prayer-loading{text-align:center;color:var(--stone);font-family:'Jost',sans-serif;font-size:12px;padding:14px;}
+.verse-highlight{background:rgba(122,158,138,.13);border-radius:3px;cursor:pointer;transition:background .15s;padding:1px 2px;margin:2px 0;display:inline;}
+.verse-highlight:hover{background:rgba(122,158,138,.3);}
+.verse-highlight.picked{background:rgba(184,150,90,.2);font-weight:500;}
+.jsec{margin-bottom:16px;}
+.jlabel{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);display:block;margin-bottom:6px;}
+.jta{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;font-family:'EB Garamond',serif;font-size:17px;color:var(--ink);resize:none;outline:none;line-height:1.7;}
+.jta:focus{border-color:var(--sage);}
+.jref{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:10px 14px;font-family:'Jost',sans-serif;font-size:13px;color:var(--stone);outline:none;}
+.jref:focus{border-color:var(--sage);}
+.editor-wrap{background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;overflow:hidden;}
+.editor-wrap:focus-within{border-color:var(--sage);}
+.editor-toolbar{display:flex;gap:2px;padding:6px 8px;border-bottom:1px solid var(--linen);background:#FAF6EE;flex-wrap:wrap;}
+.tb-btn{background:none;border:none;padding:5px 8px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--bark);font-family:'Jost',sans-serif;font-weight:400;}
+.tb-btn:hover,.tb-btn.active{background:var(--sage-xl);color:var(--sage);}
+.editor{min-height:100px;padding:12px 14px;font-family:'EB Garamond',serif;font-size:17px;color:var(--ink);outline:none;line-height:1.75;}
+/* JOURNAL */
+.ecard{background:#fff;border:1px solid var(--linen);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.ecard:active{background:#FDFAF6;}
+.edate{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;}
+.etitle{font-family:'Playfair Display',serif;font-size:17px;color:var(--ink);margin-top:4px;font-style:italic;}
+.evprev{font-family:'EB Garamond',serif;font-size:14px;color:var(--bark);margin-top:6px;opacity:.8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.etags{display:flex;gap:6px;margin-top:8px;}
+.etag{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;text-transform:uppercase;padding:3px 8px;border-radius:10px;background:var(--linen);color:var(--stone);}
+.etag.on{background:var(--sage-xl);color:var(--sage);}
+.empty-state{text-align:center;padding:40px 20px;color:var(--stone);font-family:'EB Garamond',serif;font-size:17px;font-style:italic;}
+/* PRAYER */
+.pinput-row{display:flex;gap:8px;margin-bottom:14px;}
+.pinput{flex:1;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:11px 14px;font-family:'EB Garamond',serif;font-size:16px;color:var(--ink);outline:none;}
+.pinput:focus{border-color:var(--sage);}
+.padd-btn{background:var(--sage);color:#fff;border:none;border-radius:12px;padding:0 18px;font-family:'Jost',sans-serif;font-size:20px;cursor:pointer;flex-shrink:0;}
+.pitem{display:flex;align-items:flex-start;gap:12px;padding:12px 0;border-bottom:1px solid var(--linen);}
+.pitem:last-child{border-bottom:none;}
+.pcheck{width:22px;height:22px;border-radius:50%;border:2px solid var(--linen);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;transition:all .2s;margin-top:2px;}
+.pcheck.done{background:var(--sage);border-color:var(--sage);color:#fff;}
+.ptext{flex:1;font-family:'EB Garamond',serif;font-size:17px;color:var(--ink);line-height:1.6;}
+.ptext.done{text-decoration:line-through;color:var(--stone);}
+.pdel{background:none;border:none;color:var(--linen);font-size:18px;cursor:pointer;padding:2px 4px;flex-shrink:0;}
+.pdel:active{color:var(--rose);}
+/* BIBLE */
+.bible-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+.version-toggle{display:flex;border-radius:20px;overflow:hidden;border:1.5px solid var(--linen);}
+.vbtn{padding:7px 12px;font-family:'Jost',sans-serif;font-size:10px;font-weight:400;letter-spacing:.5px;cursor:pointer;border:none;background:transparent;color:var(--stone);transition:all .2s;}
+.vbtn.active{background:var(--sage);color:#fff;}
+.bible-selects{display:flex;gap:8px;margin-bottom:14px;}
+.bsel{flex:1;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;color:var(--ink);font-family:'Jost',sans-serif;font-size:13px;padding:10px 12px;outline:none;cursor:pointer;-webkit-appearance:none;}
+.bsel:focus{border-color:var(--sage);}
+.chapter-box{background:#fff;border:1px solid var(--linen);border-radius:16px;overflow:hidden;box-shadow:0 2px 12px rgba(61,51,40,.06);}
+.chapter-head{padding:12px 16px;border-bottom:1px solid var(--linen);background:linear-gradient(145deg,#FFFDF9,#FAF6EE);}
+.chapter-head-title{font-family:'Playfair Display',serif;font-size:18px;}
+.chapter-head-sub{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-top:3px;}
+.vlist{max-height:420px;overflow-y:auto;-webkit-overflow-scrolling:touch;}
+.vlist::-webkit-scrollbar{display:none;}
+.vrow{display:flex;gap:10px;padding:9px 16px;cursor:pointer;border-bottom:1px solid #f5f0e833;transition:background .15s;}
+.vrow:active,.vrow.sel{background:var(--sage-xl);}
+.vnum{color:var(--sage);font-family:'Jost',sans-serif;font-size:10px;min-width:20px;padding-top:3px;flex-shrink:0;}
+.vword{font-family:'EB Garamond',serif;font-size:17px;line-height:1.7;color:var(--earth);}
+.use-btn{width:100%;padding:13px;border:none;background:var(--sage);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;display:none;}
+.use-btn.show{display:block;}
+.bible-msg{text-align:center;padding:36px 20px;font-family:'EB Garamond',serif;font-size:17px;color:var(--stone);font-style:italic;}
+/* HIGHLIGHTS */
+.vrow.hl1{background:#FFF9C4;}
+.vrow.hl2{background:#C8F0D8;}
+.vrow.hl3{background:#FFD6D6;}
+.vrow.hl4{background:#D6E8FF;}
+.hl-toolbar{display:flex;align-items:center;gap:6px;padding:8px 16px;background:#FDFAF6;border-bottom:1px solid var(--linen);flex-wrap:wrap;}
+.hl-btn{width:22px;height:22px;border-radius:50%;border:2px solid transparent;cursor:pointer;transition:all .2s;flex-shrink:0;}
+.hl-btn:hover,.hl-btn.active{border-color:var(--ink);transform:scale(1.15);}
+.hl-btn.yellow{background:#FFE835;}
+.hl-btn.green{background:#4CD97B;}
+.hl-btn.red{background:#FF7070;}
+.hl-btn.blue{background:#70A8FF;}
+.hl-btn.clear{background:var(--linen);font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--stone);width:auto;padding:0 8px;border-radius:10px;font-family:'Jost',sans-serif;}
+.hl-label{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-right:4px;}
+/* VERSE PICKER in Write */
+.verse-pick-btn{width:100%;padding:10px 14px;background:#FDFAF6;border:1.5px dashed var(--sage);border-radius:12px;color:var(--sage);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-top:6px;transition:all .2s;}
+.verse-pick-btn:active{background:var(--sage-xl);}
+.picked-verse-box{background:var(--sage-xl);border:1.5px solid var(--sage);border-radius:12px;padding:12px 14px;margin-top:6px;display:none;}
+.picked-verse-box.show{display:block;}
+.picked-verse-text{font-family:'Playfair Display',serif;font-size:17px;font-style:italic;color:var(--ink);line-height:1.7;}
+.picked-verse-ref{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-top:6px;}
+.picked-verse-change{font-family:'Jost',sans-serif;font-size:9px;color:var(--sage);letter-spacing:1px;cursor:pointer;text-transform:uppercase;margin-top:4px;display:inline-block;}
+.spin{display:inline-block;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.cached-dot{width:7px;height:7px;border-radius:50%;background:var(--sage);display:inline-block;margin-left:6px;vertical-align:middle;}
+/* HIGHLIGHTS TAB */
+.hl-tab-card{background:#fff;border:1px solid var(--linen);border-radius:14px;padding:14px 16px;margin-bottom:10px;}
+.hl-tab-ref{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-bottom:6px;}
+.hl-tab-text{font-family:'EB Garamond',serif;font-size:17px;color:var(--ink);line-height:1.7;}
+.hl-tab-dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:8px;vertical-align:middle;flex-shrink:0;}
+.hl-dot-hl1{background:#FFE835;}
+.hl-dot-hl2{background:#4CD97B;}
+.hl-dot-hl3{background:#FF7070;}
+.hl-dot-hl4{background:#70A8FF;}
+.hl-tab-del{background:none;border:none;color:var(--linen);font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;}
+.hl-tab-del:active{color:var(--rose);}
+.hl-tab-row{display:flex;align-items:flex-start;gap:8px;}
+.hl-tab-body{flex:1;}
+/* ALARM */
+.tipbox{background:var(--sage-xl);border:1px solid #C8DDD4;border-radius:14px;padding:14px 16px;margin-bottom:14px;}
+input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:12px;padding:12px 14px;font-family:'Jost',sans-serif;font-size:22px;color:var(--ink);outline:none;margin:10px 0;}
+/* MODAL */
+#moverlay{position:fixed;inset:0;background:rgba(61,51,40,.45);z-index:100;display:none;align-items:flex-end;}
+#moverlay.show{display:flex;}
+#modal{background:var(--cream);border-radius:24px 24px 0 0;padding:20px 20px 40px;width:100%;max-height:85vh;overflow-y:auto;}
+.mhandle{width:36px;height:4px;border-radius:2px;background:var(--linen);margin:0 auto 18px;}
+.mlabel{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin:14px 0 6px;}
+.mlabel:first-of-type{margin-top:0;}
+.mtext{font-family:'EB Garamond',serif;font-size:17px;line-height:1.75;color:var(--ink);}
+.mtext.italic{font-style:italic;}
+/* NAV */
+#nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:500px;background:rgba(245,240,232,.96);backdrop-filter:blur(12px);border-top:1px solid var(--linen);display:flex;z-index:50;padding-bottom:env(safe-area-inset-bottom);overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-webkit-overflow-scrolling:touch;}
+#nav::-webkit-scrollbar{display:none;}
+.nbtn{flex:0 0 auto;min-width:62px;display:flex;flex-direction:column;align-items:center;padding:10px 4px 8px;background:none;border:none;cursor:pointer;transition:all .2s;gap:3px;}
+.nicon{font-size:19px;}
+.nlabel{font-family:'Jost',sans-serif;font-size:8px;letter-spacing:.8px;text-transform:uppercase;color:var(--stone);transition:color .2s;white-space:nowrap;}
+.nbtn.active .nlabel{color:var(--sage);}
+.nbtn.active .nicon{filter:drop-shadow(0 0 4px rgba(122,158,138,.5));}
+/* SYNC */
+#sync-bar{position:fixed;top:0;left:50%;transform:translateX(-50%);background:var(--sage);color:#fff;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;padding:6px 20px;border-radius:0 0 12px 12px;z-index:200;display:none;}
+/* LOGIN SCREEN */
+#login-screen{position:fixed;inset:0;background:var(--cream);z-index:999;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;}
+#login-screen.hidden{display:none;}
+.login-cross{font-size:48px;margin-bottom:8px;}
+.login-title{font-family:'Playfair Display',serif;font-size:28px;color:var(--ink);margin-bottom:4px;text-align:center;}
+.login-sub{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:2px;color:var(--stone);text-transform:uppercase;margin-bottom:40px;text-align:center;}
+.login-verse{font-family:'EB Garamond',serif;font-style:italic;font-size:15px;color:var(--stone);text-align:center;max-width:280px;line-height:1.7;margin-bottom:48px;}
+.google-btn{display:flex;align-items:center;gap:12px;background:#fff;border:1.5px solid var(--linen);border-radius:14px;padding:14px 24px;font-family:'Jost',sans-serif;font-size:13px;letter-spacing:1px;color:var(--ink);cursor:pointer;box-shadow:0 2px 12px rgba(61,51,40,.08);transition:all .2s;width:100%;max-width:300px;justify-content:center;}
+.google-btn:active{transform:scale(.98);box-shadow:none;}
+.google-btn img{width:20px;height:20px;}
+.login-note{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--linen);text-transform:uppercase;margin-top:20px;text-align:center;}
+/* USER AVATAR in header */
+#user-avatar{width:28px;height:28px;border-radius:50%;object-fit:cover;border:1.5px solid var(--sage);cursor:pointer;display:none;}
+#user-menu{position:absolute;top:52px;right:12px;background:var(--cream);border:1.5px solid var(--linen);border-radius:14px;padding:8px;z-index:300;display:none;box-shadow:0 4px 20px rgba(61,51,40,.15);min-width:160px;}
+#user-menu.show{display:block;}
+.umitem{font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;color:var(--ink);padding:10px 14px;cursor:pointer;border-radius:8px;display:block;text-align:left;background:none;border:none;width:100%;}
+.umitem:hover{background:var(--sage-xl);}
+.umitem.danger{color:var(--rose);}
+/* PWA INSTALL BANNER */
+#install-banner{position:fixed;bottom:72px;left:50%;transform:translateX(-50%);background:var(--ink);color:var(--cream);border-radius:14px;padding:12px 18px;z-index:400;display:none;align-items:center;gap:12px;max-width:320px;width:calc(100% - 32px);box-shadow:0 4px 20px rgba(61,51,40,.25);}
+#install-banner.show{display:flex;}
+.install-txt{flex:1;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.5px;line-height:1.5;}
+.install-txt strong{display:block;font-size:12px;letter-spacing:1px;margin-bottom:2px;}
+.ibtn{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;border:none;border-radius:8px;padding:7px 12px;cursor:pointer;}
+.ibtn.add{background:var(--sage);color:#fff;}
+.ibtn.dismiss{background:transparent;color:rgba(245,240,232,.5);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN SCREEN -->
+<div id="login-screen">
+  <div class="login-cross">✝</div>
+  <div class="login-title">Daily Devotion</div>
+  <div class="login-sub">Your Personal Prayer Journal</div>
+  <div class="login-verse">"Your word is a lamp to my feet and a light to my path."<br><span style="font-style:normal;font-size:13px;letter-spacing:1px;">— Psalm 119:105</span></div>
+  <button class="google-btn" onclick="signInWithGoogle()">
+    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+    Sign in with Google
+  </button>
+  <div class="login-note">Your devotions are private to your account</div>
+  <div style="position:absolute;bottom:24px;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--linen);text-align:center;">Made with 🙏 by <span style="color:var(--stone);">Chano</span></div>
+</div>
+
+<!-- INSTALL BANNER -->
+<div id="install-banner">
+  <div class="install-txt"><strong>Install App</strong>Add to home screen for offline access</div>
+  <button class="ibtn add" onclick="doInstall()">Add</button>
+  <button class="ibtn dismiss" onclick="dismissInstall()">✕</button>
+</div>
+
+<div id="app">
+  <div id="header">
+    <div class="htop">
+      <span>DAILY DEVOTION</span>
+      <div style="display:flex;align-items:center;gap:10px;position:relative;">
+        <span id="clock" style="font-size:11px;letter-spacing:1px;"></span>
+        <div class="lang-toggle">
+          <button class="lbtn active" id="ben" onclick="setLang('en')">EN</button>
+          <button class="lbtn" id="btl" onclick="setLang('tl')">TL</button>
+        </div>
+        <img id="user-avatar" onclick="toggleUserMenu()" alt="Account">
+        <div id="user-menu">
+          <div style="padding:10px 14px 6px;border-bottom:1px solid var(--linen);margin-bottom:4px;">
+            <div style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;color:var(--stone);" id="user-email"></div>
+          </div>
+          <button class="umitem danger" onclick="signOutUser()">Sign Out</button>
+        </div>
+      </div>
+    </div>
+    <div class="hdate" id="hd"></div>
+    <div class="hdiv"></div>
+  </div>
+  <div id="content">
+
+    <!-- TODAY -->
+    <div class="tab active" id="tab-home">
+      <div class="card verse-card">
+        <div class="clabel gold" id="vl">✦ Verse of the Day</div>
+        <div class="vtext" id="vt"></div>
+        <div class="vref" id="vr"></div>
+        <div id="refl-area">
+          <div class="ornament">· · ·</div>
+          <div class="clabel" id="rl">Reflection</div>
+          <div class="rtext" id="rt2"></div>
+        </div>
+        <button class="btn btn-sage" id="rbtn" onclick="markRead()"></button>
+      </div>
+      <div class="card sage-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;">
+          <div class="clabel sage" id="stl" style="margin:0;">Streak</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:18px;">🔥</span>
+            <span class="sbig" id="snum">1</span>
+            <span style="color:var(--stone);font-family:'Jost',sans-serif;font-size:11px;" id="sdl">days</span>
+          </div>
+        </div>
+        <div class="week-row" id="wrow"></div>
+      </div>
+      <div class="card">
+        <div class="clabel rose" id="qpl">Morning Prayer</div>
+        <div class="qcard"><div class="rtext" id="qpt"></div></div>
+      </div>
+    </div>
+
+    <!-- WRITE -->
+    <div class="tab" id="tab-write">
+      <div class="clabel" id="wtl" style="margin-bottom:18px;">Write Your Devotion</div>
+      <div class="jsec">
+        <label class="jlabel" id="wv">Bible Verse</label>
+        <div class="verse-input-wrap" id="verse-input-wrap">
+          <!-- SELECTED HIGHLIGHTS DISPLAY -->
+          <div id="verse-rows-container"></div>
+          <!-- PICK FROM HIGHLIGHTS -->
+          <button class="add-verse-row-btn" onclick="openHighlightPicker()" style="border-color:var(--gold);color:var(--gold);width:100%;">🌟 Pumili mula sa Highlights</button>
+          <!-- COMBINED REF -->
+          <div id="jref-display" class="jref-display"></div>
+          <div id="jverse-display" class="jverse-display" spellcheck="false"></div>
+          <div id="verse-loading" class="verse-loading" style="display:none">
+            <span class="spin">✦</span> Loading…
+          </div>
+        </div>
+      </div>
+      <div class="jsec">
+        <label class="jlabel" id="wd">My Reflection</label>
+        <div class="reflection-guide">
+          <div class="rg-hint">💡 Guides: <span class="rg-chip" onclick="insertReflectionGuide('observe')">Observe</span> <span class="rg-chip" onclick="insertReflectionGuide('interpret')">Interpret</span> <span class="rg-chip" onclick="insertReflectionGuide('apply')">Apply</span> <span class="rg-chip" onclick="insertReflectionGuide('oiaformat')">OIA Format</span></div>
+        </div>
+        <div class="editor-wrap">
+          <div class="editor-toolbar">
+            <button class="tb-btn" title="bold" onmousedown="fmt(event,'bold')"><b>B</b></button>
+            <button class="tb-btn" title="italic" onmousedown="fmt(event,'italic')"><i>I</i></button>
+            <button class="tb-btn" onmousedown="fmt(event,'insertUnorderedList')">• List</button>
+            <button class="tb-btn" onmousedown="fmt(event,'insertOrderedList')">1. List</button>
+            <button class="tb-btn" onmousedown="fmt(event,'indent')">→</button>
+          </div>
+          <div class="editor" id="jd" contenteditable="true" style="min-height:180px;"></div>
+        </div>
+      </div>
+      <div class="jsec">
+        <label class="jlabel" id="wp">My Prayer</label>
+        <div class="editor-wrap">
+          <div class="editor-toolbar">
+            <button class="tb-btn" title="bold" onmousedown="fmt(event,'bold')"><b>B</b></button>
+            <button class="tb-btn" title="italic" onmousedown="fmt(event,'italic')"><i>I</i></button>
+            <button class="tb-btn" onmousedown="fmt(event,'insertUnorderedList')">• List</button>
+            <button class="tb-btn" onmousedown="fmt(event,'insertOrderedList')">1. List</button>
+          </div>
+          <div class="editor" id="jp" contenteditable="true"></div>
+        </div>
+      </div>
+      <button class="btn btn-sage" onclick="saveEntry()" id="sbtn">Save Devotion</button>
+      <button class="btn btn-ghost" onclick="clearForm()" style="margin-top:8px;" id="cbtn">Clear</button>
+    </div>
+
+    <!-- JOURNAL -->
+    <div class="tab" id="tab-entries">
+      <div class="clabel" id="jtl" style="margin-bottom:14px;">My Journal</div>
+      <div id="elist"></div>
+    </div>
+
+    <!-- PRAYER -->
+    <div class="tab" id="tab-prayer">
+      <div class="clabel" id="ptl" style="margin-bottom:4px;">My Personal Prayer</div>
+      <div class="prayer-date-label" id="prayer-date-label"></div>
+
+      <!-- PRAYER TITLE -->
+      <div style="margin-bottom:14px;">
+        <input type="text" id="prayer-title" class="pinput" placeholder="Pamagat / Para kanino ito? (hal. Para sa Pamilya, Pasasalamat, Healing...)" style="width:100%;box-sizing:border-box;">
+      </div>
+      <div class="acts-guide">
+        <!-- A - Adoration -->
+        <div class="acts-section">
+          <div class="acts-header">
+            <span class="acts-letter" style="color:#7A9E8A;">A</span>
+            <div>
+              <div class="acts-title">Adoration</div>
+              <div class="acts-sub">Purihin ang Diyos — Sino Siya sa iyong buhay?</div>
+            </div>
+          </div>
+          <div class="acts-editor" id="acts-a" contenteditable="true" data-placeholder="Halimbawa: Panginoon, pinupuri kita dahil ikaw ay tapat at mapagmahal…"></div>
+        </div>
+        <!-- C - Confession -->
+        <div class="acts-section">
+          <div class="acts-header">
+            <span class="acts-letter" style="color:#C4956A;">C</span>
+            <div>
+              <div class="acts-title">Confession</div>
+              <div class="acts-sub">Aminin ang iyong mga pagkakamali at humingi ng kapatawaran</div>
+            </div>
+          </div>
+          <div class="acts-editor" id="acts-c" contenteditable="true" data-placeholder="Halimbawa: Patawarin mo ako, Panginoon, dahil hindi ako naging mapagpasensya…"></div>
+        </div>
+        <!-- T - Thanksgiving -->
+        <div class="acts-section">
+          <div class="acts-header">
+            <span class="acts-letter" style="color:#8FA8C8;">T</span>
+            <div>
+              <div class="acts-title">Thanksgiving</div>
+              <div class="acts-sub">Magpasalamat — Ano ang mga pagpapalang natanggap mo?</div>
+            </div>
+          </div>
+          <div class="acts-editor" id="acts-t" contenteditable="true" data-placeholder="Halimbawa: Salamat sa iyong proteksyon, sa pamilya ko, sa araw na ito…"></div>
+        </div>
+        <!-- S - Supplication -->
+        <div class="acts-section">
+          <div class="acts-header">
+            <span class="acts-letter" style="color:#B07A8A;">S</span>
+            <div>
+              <div class="acts-title">Supplication</div>
+              <div class="acts-sub">Ipahayag ang iyong mga kahilingan — para sa sarili at sa iba</div>
+            </div>
+          </div>
+          <div class="acts-editor" id="acts-s" contenteditable="true" data-placeholder="Halimbawa: Panginoon, ipagkaloob mo sa aking pamilya ang kalusugan at pagkakaisa…"></div>
+        </div>
+      </div>
+
+      <!-- FORMAT TOOLBAR -->
+      <div class="acts-toolbar">
+        <button class="tb-btn" onmousedown="actsFmt(event,'bold')"><b>B</b></button>
+        <button class="tb-btn" onmousedown="actsFmt(event,'italic')"><i>I</i></button>
+        <button class="tb-btn" onmousedown="actsFmt(event,'insertUnorderedList')">• List</button>
+        <span class="acts-toolbar-hint">Mag-click sa section bago mag-format</span>
+      </div>
+
+      <div style="display:flex;gap:8px;margin-top:12px;">
+        <button class="btn btn-sage" onclick="savePrayer()" id="save-prayer-btn">💾 I-save</button>
+        <button class="btn btn-ghost" onclick="copyFullPrayer()">📋 Copy</button>
+        <button class="btn btn-ghost" onclick="clearPrayer()">✕ Clear</button>
+      </div>
+
+      <!-- SAVED PRAYERS LIST -->
+      <div class="ai-prayer-section" style="margin-top:18px;">
+        <div class="clabel" style="margin-bottom:10px;">✦ Nakaraang Panalangin</div>
+        <div id="plist"></div>
+      </div>
+    </div>
+
+    <!-- BIBLE -->
+    <div class="tab" id="tab-bible">
+      <div class="bible-top">
+        <div class="clabel" id="btabl" style="margin:0;">✦ Bible</div>
+        <div class="version-toggle">
+          <button class="vbtn active" id="vbtn-kjv" onclick="setVer('kjv',this)">KJV</button>
+          <button class="vbtn" id="vbtn-asv" onclick="setVer('asv',this)">ASV</button>
+          <button class="vbtn" id="vbtn-web" onclick="setVer('web',this)">WEB</button>
+          <button class="vbtn" id="vbtn-bbe" onclick="setVer('bbe',this)">BBE</button>
+        </div>
+      </div>
+      <div class="bible-selects">
+        <select class="bsel" id="bbook" onchange="onBook()">
+          <option value="">— Book —</option>
+        </select>
+        <select class="bsel" id="bchap" onchange="onChap()" disabled>
+          <option value="">— Ch —</option>
+        </select>
+      </div>
+      <div id="bview"></div>
+    </div>
+
+    <!-- HIGHLIGHTS -->
+    <div class="tab" id="tab-highlights">
+      <div class="clabel" id="hltl" style="margin-bottom:14px;">✦ My Highlights</div>
+      <div id="hllist"></div>
+    </div>
+
+    <!-- ALARM -->
+    <div class="tab" id="tab-alarm">
+      <div class="clabel" id="remtl" style="margin-bottom:16px;">Daily Reminder</div>
+      <div class="card" style="text-align:center;">
+        <div class="clabel" id="remsl" style="text-align:left;margin-bottom:4px;">Set your devotion time</div>
+        <input type="time" id="remtime" value="06:00">
+        <button class="btn btn-sage" id="rembtn" onclick="saveReminder()">Save</button>
+      </div>
+      <div class="tipbox">
+        <div class="clabel">Tip</div>
+        <div class="rtext" id="tipt" style="font-size:15px;"></div>
+      </div>
+      <div class="card sage-card">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <span style="font-size:32px;">🔥</span>
+          <div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <span class="sbig" id="snum2">1</span>
+              <span style="color:var(--stone);font-family:'Jost',sans-serif;font-size:12px;" id="sd2">day streak</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+
+  <!-- NAV -->
+  <div id="nav">
+    <button class="nbtn active" id="nav-home" onclick="switchTab('home')"><span class="nicon">☀️</span><span class="nlabel" id="nl-home">Today</span></button>
+    <button class="nbtn" id="nav-write" onclick="switchTab('write')"><span class="nicon">✏️</span><span class="nlabel" id="nl-write">Write</span></button>
+    <button class="nbtn" id="nav-entries" onclick="switchTab('entries')"><span class="nicon">📖</span><span class="nlabel" id="nl-entries">Journal</span></button>
+    <button class="nbtn" id="nav-prayer" onclick="switchTab('prayer')"><span class="nicon">🙏</span><span class="nlabel" id="nl-prayer">Prayer</span></button>
+    <button class="nbtn" id="nav-bible" onclick="switchTab('bible')"><span class="nicon">📜</span><span class="nlabel" id="nl-bible">Bible</span></button>
+    <button class="nbtn" id="nav-highlights" onclick="switchTab('highlights')"><span class="nicon">🌟</span><span class="nlabel" id="nl-highlights">Highlights</span></button>
+    <button class="nbtn" id="nav-alarm" onclick="switchTab('alarm')"><span class="nicon">🕊️</span><span class="nlabel" id="nl-alarm">Alarm</span></button>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div id="moverlay" onclick="if(event.target===this)closeModal()">
+  <div id="modal">
+    <div class="mhandle"></div>
+    <div id="mtitle" style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;"></div>
+    <div id="mdate" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;"></div>
+    <div class="mlabel" id="ml-v">Verse</div>
+    <div class="mtext italic" id="mv"></div>
+    <div style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);margin-top:4px;" id="mr"></div>
+    <div class="mlabel" id="ml-r">Reflection</div>
+    <div class="mtext" id="md"></div>
+    <div class="mlabel" id="ml-p">Prayer</div>
+    <div class="mtext" id="mp"></div>
+    <!-- EXPORT BUTTONS -->
+    <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;">
+      <button class="btn btn-sage" onclick="exportEntryPDF()" id="btn-pdf">📄 PDF</button>
+      <button class="btn btn-sage" onclick="exportEntryImage()" id="btn-img">🖼️ Image</button>
+      <button class="btn btn-ghost" onclick="closeModal()" id="mcbtn">Close</button>
+    </div>
+    <div id="export-status" style="font-family:'Jost',sans-serif;font-size:11px;color:var(--sage);margin-top:8px;display:none;"></div>
+  </div>
+</div>
+
+<div id="sync-bar"></div>
+
+<!-- HIGHLIGHT PICKER MODAL -->
+<div id="hl-picker-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeHLPicker()">
+  <div style="background:var(--cream);border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:80vh;overflow-y:auto;box-sizing:border-box;">
+    <div style="width:36px;height:4px;background:var(--linen);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="font-family:'Playfair Display',serif;font-size:18px;margin-bottom:4px;">🌟 Mga Highlights</div>
+    <div style="font-family:'Jost',sans-serif;font-size:11px;color:var(--stone);margin-bottom:16px;">Piliin ang mga verse na idadagdag sa journal</div>
+    <div id="hl-picker-list"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-sage" onclick="addSelectedHighlights()">✓ Idagdag ang Napili</button>
+      <button class="btn btn-ghost" onclick="closeHLPicker()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// DATA
+// ============================================================
+var VERSES=[
+  {ref:"John 3:16",en:"For God so loved the world that he gave his one and only Son, that whoever believes in him shall not perish but have eternal life.",tl:"Sapagkat gayon na lamang ang pagmamahal ng Diyos sa mundo na ibinigay niya ang kanyang kaisa-isang Anak.",re:"God's love is extravagant and personal. You are the reason for this gift.",rt:"Napakalaki ng pagmamahal ng Diyos sa iyo — ikaw ang dahilan ng kaniyang handog."},
+  {ref:"Psalm 23:1",en:"The LORD is my shepherd, I lack nothing.",tl:"Ang Panginoon ay aking pastor; wala akong kulang.",re:"When God is your shepherd, 'enough' is a promise, not a struggle.",rt:"Kapag ang Diyos ang iyong pastor, ang sapat ay isang pangako."},
+  {ref:"Jeremiah 29:11",en:"For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, plans to give you hope and a future.",tl:"Sapagkat nalalaman ko ang mga plano na aking pinag-isipan para sa inyo — mga plano para sa inyong kapakanan at hindi sa inyong kasamaan.",re:"God's plan for your life is not a punishment — it's a promise of hope.",rt:"Ang plano ng Diyos para sa iyo ay pangako ng pag-asa."},
+  {ref:"Romans 8:28",en:"And we know that in all things God works for the good of those who love him.",tl:"At nalalaman nating ang lahat ng mga bagay ay nagkakaisa para sa ikabubuti ng mga nagmamahal sa Diyos.",re:"Even the hard seasons have a purpose. Nothing is wasted in God's hands.",rt:"Kahit ang mahirap na panahon ay may layunin. Walang nasasayang sa mga kamay ng Diyos."},
+  {ref:"Philippians 4:13",en:"I can do all this through him who gives me strength.",tl:"Kaya ko ang lahat sa pamamagitan niya na nagbibigay sa akin ng lakas.",re:"Not your strength alone — His strength through you. That changes everything.",rt:"Hindi ikaw lang — ang Kanyang lakas sa pamamagitan mo. Nagbabago iyon ng lahat."},
+  {ref:"Matthew 11:28",en:"Come to me, all you who are weary and burdened, and I will give you rest.",tl:"Halina sa akin, kayong lahat na nahihirapan at may mabibigat na pasan, at kayo'y aking papagpapahingahin.",re:"Jesus doesn't say fix yourself first. He says come as you are.",rt:"Hindi sinabi ni Jesus na ayusin mo muna ang sarili mo. Sinabi Niya: halina ka kung sino ka."},
+  {ref:"Psalm 46:10",en:"Be still, and know that I am God.",tl:"Tumigil kayo at kilalanin na Ako ay Diyos.",re:"In the chaos of life, God's invitation is simple: be still.",rt:"Sa kaguluhan ng buhay, simple ang imbitasyon ng Diyos: tumigil ka."},
+  {ref:"Isaiah 40:31",en:"But those who hope in the LORD will renew their strength. They will soar on wings like eagles.",tl:"Ngunit ang mga naghihintay sa Panginoon ay magbabago ng kanilang lakas. Sila'y lilipad nang tulad ng mga agila.",re:"Waiting on God isn't wasted time — it's where renewal happens.",rt:"Ang paghihintay sa Diyos ay hindi sayang na oras — doon nangyayari ang pagbabago."},
+  {ref:"1 Peter 5:7",en:"Cast all your anxiety on him because he cares for you.",tl:"Ibuhos sa kanya ang lahat ng inyong mga pangamba, sapagkat siya ay nagmamalasakit sa inyo.",re:"God doesn't want you to carry your worries alone. He is big enough to hold them.",rt:"Hindi gusto ng Diyos na dalhin mo mag-isa ang iyong mga alalahanin."},
+  {ref:"2 Timothy 1:7",en:"For the Spirit God gave us does not make us timid, but gives us power, love and self-discipline.",tl:"Sapagkat hindi tayo binigyan ng Diyos ng espiritu ng katakutan, kundi ng kapangyarihan at pag-ibig at disiplina.",re:"Fear is not from God. Step into today with boldness.",rt:"Ang takot ay hindi mula sa Diyos. Humakbang nang may lakas ng loob ngayon."},
+  {ref:"Matthew 6:33",en:"But seek first his kingdom and his righteousness, and all these things will be given to you as well.",tl:"Ngunit hanapin muna ninyo ang kanyang kaharian at ang kanyang katuwiran, at ang lahat ng mga bagay na ito ay idadagdag sa inyo.",re:"Priority changes everything. When God is first, everything else finds its right place.",rt:"Ang priyoridad ay nagbabago ng lahat. Kapag ang Diyos ang una, lahat ng iba ay maaaayos."},
+  {ref:"Romans 12:2",en:"Do not conform to the pattern of this world, but be transformed by the renewing of your mind.",tl:"At huwag kayong makiayon sa mundong ito, kundi magbago kayo sa pamamagitan ng pagbabago ng inyong pag-iisip.",re:"Transformation starts in the mind. Invite God to renew how you think today.",rt:"Ang pagbabago ay nagsisimula sa isipan. Anyayahan ang Diyos na baguhin ang iyong pag-iisip."},
+  {ref:"Galatians 5:22",en:"But the fruit of the Spirit is love, joy, peace, forbearance, kindness, goodness, faithfulness, gentleness and self-control.",tl:"Ngunit ang bunga ng Espiritu ay pag-ibig, kagalakan, kapayapaan, pagtitiis, kabutihang-loob, kabutihan, katapatan, kahinahunan, pagpipigil sa sarili.",re:"The fruit of the Spirit is the overflow of a heart surrendered to God.",rt:"Ang bunga ng Espiritu ay pagapaw ng pusong nakasurender sa Diyos."},
+  {ref:"Lamentations 3:22-23",en:"Because of the LORD's great love we are not consumed, for his compassions never fail. They are new every morning.",tl:"Sa dahilang malaki ang pagmamahal ng Panginoon ay hindi tayo nalipol, sapagkat hindi naubos ang kanyang mga habag. Bago sila tuwing umaga.",re:"Every morning is a fresh start. His mercies reset daily — and so can you.",rt:"Bawat umaga ay bagong simula. Bago ang Kanyang habag araw-araw — at ikaw din."}
+];
+
+var BOOKS=["Genesis","Exodus","Leviticus","Numbers","Deuteronomy","Joshua","Judges","Ruth","1 Samuel","2 Samuel","1 Kings","2 Kings","1 Chronicles","2 Chronicles","Ezra","Nehemiah","Esther","Job","Psalms","Proverbs","Ecclesiastes","Song of Solomon","Isaiah","Jeremiah","Lamentations","Ezekiel","Daniel","Hosea","Joel","Amos","Obadiah","Jonah","Micah","Nahum","Habakkuk","Zephaniah","Haggai","Zechariah","Malachi","Matthew","Mark","Luke","John","Acts","Romans","1 Corinthians","2 Corinthians","Galatians","Ephesians","Philippians","Colossians","1 Thessalonians","2 Thessalonians","1 Timothy","2 Timothy","Titus","Philemon","Hebrews","James","1 Peter","2 Peter","1 John","2 John","3 John","Jude","Revelation"];
+
+var CHAPS={Genesis:50,Exodus:40,Leviticus:27,Numbers:36,Deuteronomy:34,Joshua:24,Judges:21,Ruth:4,"1 Samuel":31,"2 Samuel":24,"1 Kings":22,"2 Kings":25,"1 Chronicles":29,"2 Chronicles":36,Ezra:10,Nehemiah:13,Esther:10,Job:42,Psalms:150,Proverbs:31,Ecclesiastes:12,"Song of Solomon":8,Isaiah:66,Jeremiah:52,Lamentations:5,Ezekiel:48,Daniel:12,Hosea:14,Joel:3,Amos:9,Obadiah:1,Jonah:4,Micah:7,Nahum:3,Habakkuk:3,Zephaniah:3,Haggai:2,Zechariah:14,Malachi:4,Matthew:28,Mark:16,Luke:24,John:21,Acts:28,Romans:16,"1 Corinthians":16,"2 Corinthians":13,Galatians:6,Ephesians:6,Philippians:4,Colossians:4,"1 Thessalonians":5,"2 Thessalonians":3,"1 Timothy":6,"2 Timothy":4,Titus:3,Philemon:1,Hebrews:13,James:5,"1 Peter":5,"2 Peter":3,"1 John":5,"2 John":1,"3 John":1,Jude:1,Revelation:22};
+
+var TGL_BOOKS={"Genesis":"Genesis","Exodus":"Exodus","Leviticus":"Levitico","Numbers":"Mga Bilang","Deuteronomy":"Deuteronomio","Joshua":"Josue","Judges":"Mga Hukom","Ruth":"Ruth","1 Samuel":"1 Samuel","2 Samuel":"2 Samuel","1 Kings":"1 Mga Hari","2 Kings":"2 Mga Hari","1 Chronicles":"1 Cronica","2 Chronicles":"2 Cronica","Ezra":"Ezra","Nehemiah":"Nehemias","Esther":"Esther","Job":"Job","Psalms":"Mga Awit","Proverbs":"Mga Kawikaan","Ecclesiastes":"Eclesiastes","Song of Solomon":"Awit ng mga Awit","Isaiah":"Isaias","Jeremiah":"Jeremias","Lamentations":"Mga Panaghoy","Ezekiel":"Ezekiel","Daniel":"Daniel","Hosea":"Oseas","Joel":"Joel","Amos":"Amos","Obadiah":"Obadias","Jonah":"Jonas","Micah":"Mikas","Nahum":"Nahum","Habakkuk":"Habacuc","Zephaniah":"Sofonias","Haggai":"Ageo","Zechariah":"Zacarias","Malachi":"Malaquias","Matthew":"Mateo","Mark":"Marcos","Luke":"Lucas","John":"Juan","Acts":"Mga Gawa","Romans":"Roma","1 Corinthians":"1 Corinto","2 Corinthians":"2 Corinto","Galatians":"Galacia","Ephesians":"Efeso","Philippians":"Filipos","Colossians":"Colosas","1 Thessalonians":"1 Tesalonica","2 Thessalonians":"2 Tesalonica","1 Timothy":"1 Timoteo","2 Timothy":"2 Timoteo","Titus":"Tito","Philemon":"Filemon","Hebrews":"Hebreo","James":"Santiago","1 Peter":"1 Pedro","2 Peter":"2 Pedro","1 John":"1 Juan","2 John":"2 Juan","3 John":"3 Juan","Jude":"Judas","Revelation":"Apocalipsis"};
+
+// ============================================================
+// TAGALOG BIBLE DATA (Ang Biblia - selected books)
+// ============================================================
+var TL_BIBLE={
+"John":{
+1:[" ","Sa pasimula ay naroroon na ang Salita, at ang Salita ay kasama ng Diyos, at ang Salita ay Diyos.","Siya ay kasama ng Diyos sa pasimula.","Sa pamamagitan niya ay nilikha ang lahat ng bagay; wala ni isa mang bagay na nalikha nang hindi sa pamamagitan niya.","Sa kanya ay buhay, at ang buhay ay siyang ilaw ng mga tao.","Ang ilaw ay nagliliwanag sa kadiliman, at hindi ito nalupig ng kadiliman.","Nagkaroon ng isang taong sinugo ng Diyos, na ang pangalan ay Juan.","Siya ay dumating bilang saksi upang magpatotoo tungkol sa ilaw, upang ang lahat ay manampalataya sa pamamagitan niya.","Hindi siya ang ilaw, kundi dumating upang magpatotoo tungkol sa ilaw.","Ang tunay na ilaw na nagbibigay-liwanag sa bawat tao ay darating sa mundo.","Siya ay nasa mundo, at ang mundo ay nilikha sa pamamagitan niya, ngunit hindi siya nakilala ng mundo.","Siya ay pumarito sa kanya mismong mga bagay, at ang kanyang sariling mga tao ay hindi siya tinanggap.","Ngunit sa lahat ng tumanggap sa kanya, sa mga nanampalataya sa kanyang pangalan, ay binigyan niya ng karapatang maging mga anak ng Diyos.","Na ipinanganak hindi sa dugo, ni sa kalooban ng laman, ni sa kalooban ng tao, kundi ng Diyos.","At ang Salita ay naging tao at tumahan sa aming piling, at nakita namin ang kanyang kaluwalhatian, kaluwalhatian gaya ng bugtong na Anak ng Ama, puno ng biyaya at katotohanan.","Nagpatotoo si Juan tungkol sa kanya at sumigaw, 'Ito ang sinabi ko: Ang siyang darating pagkatapos ko ay mas dakila sa akin, sapagkat siya ay mayroon na bago pa man ako.'","Sapagkat mula sa kanyang kapunuan ay nakatanggap tayong lahat ng biyaya sa biyaya.","Sapagkat ibinigay ang kautusan sa pamamagitan ni Moises; ang biyaya at katotohanan ay dumating sa pamamagitan ni Jesu-Cristo.","Walang sinumang nakakita sa Diyos kailanman; ang bugtong na Anak, na nasa puso ng Ama, siya ang nagpakilala sa kanya."],
+3:[" ","Nagkaroon ng isang lalaki sa mga Pariseo na ang pangalan ay Nicodemo, isang pinuno ng mga Judio.","Ito ay pumunta kay Jesus sa gabi at nagsabi sa kanya, 'Rabi, alam namin na ikaw ay isang guro na nagmula sa Diyos, sapagkat walang sinuman ang makakagawa ng mga tanda na ginagawa mo maliban kung ang Diyos ay kasama niya.'","Sumagot si Jesus at sinabi sa kanya, 'Katotohanan, katotohanang sinasabi ko sa iyo, maliban kung ipanganak muli ang isang tao, hindi niya makikita ang kaharian ng Diyos.'","Sinabi ni Nicodemo sa kanya, 'Paano maaaring ipanganak ang isang tao pagka matanda na siya? Makapasok ba siya nang ikalawang beses sa sinapupunan ng kanyang ina at ipanganak?'","Sumagot si Jesus, 'Katotohanan, katotohanang sinasabi ko sa iyo, maliban kung ipanganak ang isang tao ng tubig at ng Espiritu, hindi siya makapasok sa kaharian ng Diyos.'","Ang ipinanganak ng laman ay laman nga, at ang ipinanganak ng Espiritu ay espiritu.","Huwag kang magtaka sa aking sinabi sa iyo, Kailangang ipanganak kayong muli.","Ang hangin ay humihihip kung saan nito nais, at naririnig mo ang ugong nito, ngunit hindi mo alam kung saan ito nanggagaling at kung saan ito patungo. Ganoon ang bawat isang ipinanganak ng Espiritu.'","Sumagot si Nicodemo, 'Paano mangyayari ang mga bagay na ito?'","Sumagot si Jesus, 'Ikaw ba ay guro sa Israel, at hindi mo alam ang mga bagay na ito?'","Katotohanan, katotohanang sinasabi ko sa iyo, sinasalita namin ang aming nalalaman, at pinapatotohanan ang aming nakita, at hindi ninyo tinatanggap ang aming patotoo.","Kung sinabi ko sa inyo ang mga bagay na ukol sa lupa at hindi kayo naniniwala, paano kayong maniniwala kung sasabihin ko sa inyo ang mga bagay na ukol sa langit?","Walang sinumang pumaitaas sa langit kundi ang bumaba mula sa langit, ang Anak ng Tao na nasa langit.","At kung paanong itinaas ni Moises ang ahas sa ilang, gayon din naman ang Anak ng Tao ay kailangang itaas,","Upang ang sinumang sumampalataya sa kanya ay hindi mapahamak kundi magkaroon ng buhay na walang hanggan.","Sapagkat gayon na lamang ang pagmamahal ng Diyos sa sanlibutan, na ibinigay niya ang kanyang bugtong na Anak, upang ang sinumang sumampalataya sa kanya ay hindi mapahamak, kundi magkaroon ng buhay na walang hanggan.","Sapagkat hindi sinugo ng Diyos ang kanyang Anak sa sanlibutan upang hatulan ang sanlibutan, kundi upang maligtas ang sanlibutan sa pamamagitan niya.","Ang sumasampalataya sa kanya ay hindi hinahatulan; ang hindi sumasampalataya ay hinatulan na, sapagkat hindi siya nanampalataya sa pangalan ng bugtong na Anak ng Diyos."],
+14:[" ","Huwag magulumihanan ang inyong puso; manampalataya kayo sa Diyos, manampalataya rin kayo sa akin.","Sa bahay ng aking Ama ay maraming tirahan; kung hindi gayon, sinabi ko sana sa inyo; sapagkat ako ay pumupunta upang maghanda ng lugar para sa inyo.","At kung ako ay pumunta at naghanda ng lugar para sa inyo, mumustahin ko kayo sa aking sarili, upang kung nasaan ako, nandoon din kayo.","At kung saan ako pupunta ay alam ninyo ang daan.'","Sinabi sa kanya ni Tomas, 'Panginoon, hindi namin alam kung saan ka pupunta; paano namin malalaman ang daan?'","Sinabi sa kanya ni Jesus, 'Ako ang daan, ang katotohanan, at ang buhay. Walang sinumang makakarating sa Ama maliban sa pamamagitan ko.'","Kung nakilala ninyo ako, makikilala rin ninyo ang aking Ama; at mula ngayon siya ay inyong nakikilala at nakita ninyo siya.'","Sinabi sa kanya ni Felipe, 'Panginoon, ipakita mo sa amin ang Ama, at sapat na iyon para sa amin.'","Sinabi ni Jesus sa kanya, 'Matagal ko na kayong kasama, at hindi mo pa ako nakilala, Felipe? Ang nakakita sa akin ay nakakita sa Ama; paano mong sinasabi, Ipakita mo sa amin ang Ama?'","Hindi ka ba naniniwala na ako ay nasa Ama, at ang Ama ay nasa akin? Ang mga salitang sinasabi ko sa inyo ay hindi ko sinasalita mula sa aking sarili; kundi ang Amang nananahan sa akin ang gumagawa ng kanyang mga gawa.","Manampalataya kayo sa akin na ako ay nasa Ama at ang Ama ay nasa akin; o kaya ay manampalataya kayo sa akin dahil sa mga gawa mismo.","Katotohanan, katotohanang sinasabi ko sa inyo, ang sumasampalataya sa akin ang mga gawaing ginagawa ko ay gagawin rin niya; at mas malalaking gawa pa kaysa sa mga ito ang gagawin niya, sapagkat ako ay pupunta sa Ama.","At anumang hilingin ninyo sa aking pangalan, ito ay gagawin ko, upang ang Ama ay maluwalhati sa Anak.","Kung kayo ay hihiling ng anuman sa aking pangalan, ito ay gagawin ko.","Kung iniibig ninyo ako, susundin ninyo ang aking mga utos.","At ako ay mananawagan sa Ama, at ibibigay niya sa inyo ang isa pang Mang-aalalay, upang siya ay makasamaninyo magpakailanman;","Ang Espiritu ng katotohanan na hindi matanggap ng sanlibutan, sapagkat hindi nito nakikita siya at hindi nito nalalaman siya; nakikilala ninyo siya, sapagkat siya ay nananahan sa inyo at siya ay mananatili sa inyo.","Hindi ko kayo iiwanan na mga ulila; pupunta ako sa inyo."],
+15:[" ","Ako ang tunay na puno ng ubas, at ang aking Ama ang magsasaka.","Ang bawat sanga sa akin na hindi nagbubunga ay inaalis niya; at ang bawat sanga na nagbubunga ay inililinis niya, upang magbunga nang higit.","Kayo ay nalinis na ngayon dahil sa salitang sinabi ko sa inyo.","Manatili kayo sa akin, at ako ay mananatili sa inyo. Kung paanong ang sanga ay hindi makapagbubunga mula sa kanyang sarili maliban kung ito ay mananatili sa puno ng ubas, gayon din kayo maliban kung kayo ay mananatili sa akin.","Ako ang puno ng ubas, kayo ang mga sanga. Ang nananatili sa akin, at ako sa kanya, ay siya ang nagbubunga nang marami, sapagkat wala kayong magagawa nang hiwalay sa akin.","Kung ang sinuman ay hindi mananatili sa akin, siya ay itatapon parang sanga at matutuyo; at ang mga ito ay tinitipon at itinapon sa apoy, at ito ay susunugin.","Kung kayo ay mananatili sa akin, at ang aking mga salita ay mananatili sa inyo, hihilingin ninyo kung anuman ang inyong nais at ito ay magiganap para sa inyo.","Dito niluwalhati ang aking Ama, na kayo ay magbubunga nang marami; sa gayon kayo ay magiging aking mga alagad.","Kung paanong iniibig ako ng Ama, gayon din naman iniibig ko kayo; manatili kayo sa aking pagibig.","Kung sinusunod ninyo ang aking mga utos, kayo ay mananatili sa aking pagibig; kung paanong sinunod ko ang mga utos ng aking Ama at nananatili ako sa kanyang pagibig.","Ang mga bagay na ito ay sinabi ko sa inyo upang ang aking kagalakan ay manirahan sa inyo at upang ang inyong kagalakan ay mapuspos.","Ito ang aking utos, na kayo ay magibigan sa isa't isa, gaya ng pagibig ko sa inyo.","Walang sinumang may pagibig na hihigit pa kaysa sa ito, na ibigay ng isang tao ang kanyang buhay para sa kanyang mga kaibigan."],
+},
+"Psalms":{
+1:[" ","Mapalad ang taong hindi lumalakad sa payo ng masama, ni tumatayo sa landas ng mga makasalanan, ni umuupo sa upuan ng mga manunuya.","Kundi ang kanyang kasiyahan ay nasa kautusan ng Panginoon; at sa kanyang kautusan ay nagmumuni-muni siya araw at gabi.","Siya ay magiging parang punong puno na itanim sa tabi ng mga ilog ng tubig, na nagbubunga sa takdang panahon, at ang dahon nito ay hindi nalalanta; at anumang kanyang gawin ay magiging matagumpay.","Ang masama ay hindi gayon, kundi parang ipa na itinataboy ng hangin.","Kaya ang masama ay hindi makatatayo sa paghuhukom, ni ang mga makasalanan sa kapulungan ng matuwid.","Sapagkat kilala ng Panginoon ang landas ng matuwid; ngunit ang landas ng masama ay mapapahamak."],
+23:[" ","Ang Panginoon ay aking pastor; hindi ako magkukulang.","Pinahihiga niya ako sa mga sariwang pastulan; pinangungunahan niya ako sa tabi ng mga payapang tubig.","Ibinabalik niya ang aking kaluluwa; pinangungunahan niya ako sa mga landas ng katuwiran alang-alang sa kanyang pangalan.","Oo, kahit na lumakad ako sa libis ng lilim ng kamatayan, wala akong katatakutang kasamaan; sapagkat ikaw ay kasama ko; ang iyong pamalo at iyong tungkod ay nagliligtas sa akin.","Naghahanda ka ng mesa para sa akin sa harapan ng aking mga kaaway; pinahiran mo ng langis ang aking ulo; ang aking saro ay umaapaw.","Tiyak na ang kabutihan at kaawaan ay susunod sa akin sa lahat ng araw ng aking buhay; at mananahan ako sa bahay ng Panginoon magpakailanman."],
+91:[" ","Ang tumatahan sa silong ng Kataas-taasan ay manananatili sa lilim ng Makapangyarihan sa lahat.","Sasabihin ko tungkol sa Panginoon, Siya ang aking kanlungan at aking katibayan; ang aking Diyos, sa kanya ako magtitiwala.","Sapagkat siya ang magliligtas sa iyo mula sa bitag ng mangangaso, at mula sa salot na mapanganib.","Sasakloban ka niya ng kanyang mga pakpak, at sa ilalim ng kanyang mga pakpak ay mahahanap mo ang kanlungan; ang kanyang katotohanan ay magiging kalasag at pangkalakal mo.","Hindi ka matatakot sa kakilabutan sa gabi; ni sa palaso na lumilipad sa maghapon;","Ni sa salot na gumagapang sa kadiliman; ni sa kapahamakang nagwawasak sa katanghalian.","Libo-libo ang mabubuwal sa iyong tabi, at sampung libo ang sa iyong kanan; ngunit hindi ito lalapit sa iyo."],
+},
+"Proverbs":{
+3:[" ","Anak ko, huwag mong kalimutan ang aking kautusan; at ingatan ng iyong puso ang aking mga utos;","Sapagkat hahaba ng mga araw at mga taon ng buhay at kapayapaan ang idudulot nila sa iyo.","Huwag mong pabayaang lumayo sa iyo ang kaawaan at katotohanan; itali mo ang mga ito sa iyong leeg; isulat mo ang mga ito sa tapyas ng iyong puso;","Upang makahanap ka ng biyaya at mabuting kaunawaan sa paningin ng Diyos at ng tao.","Magtiwala ka sa Panginoon nang buong puso mo, at huwag kang umasa sa iyong sariling kaunawaan.","Sa lahat ng iyong mga lakad, kilalanin mo siya, at kanya mong itutuwid ang iyong mga landas.","Huwag kang maging pantas sa iyong sariling mga mata; matakot ka sa Panginoon at lumayo sa kasamaan.","Magiging kagalingan ito sa iyong katawan, at kalusugan sa iyong mga buto.","Parangalan mo ang Panginoon ng iyong kayamanan, at sa mga unang bunga ng lahat ng iyong ani;","Kung gayon ang iyong mga kamalig ay mapupuno ng kasaganaan, at ang iyong mga pisaan ay sasagana ng bagong alak.","Anak ko, huwag mong hamakin ang parusa ng Panginoon; ni huwag kang mangdidismaya ng kanyang saway;","Sapagkat ang Panginoon ay nagpaparusa sa kanyang minamahal, gaya ng ama sa anak na kanyang kinalulugdan."],
+},
+"Romans":{
+8:[" ","Kaya nga ngayon, wala nang kahatulan sa mga nasa kay Cristo Jesus, na hindi lumalakad ayon sa laman, kundi ayon sa Espiritu.","Sapagkat ang kautusan ng Espiritu ng buhay kay Cristo Jesus ay pinalaya ako mula sa kautusan ng kasalanan at kamatayan.","Sapagkat ang hindi magawa ng kautusan, dahil sa kahihinaan nito sa pamamagitan ng laman, ginawa ng Diyos sa pagsusugo ng kanyang sariling Anak sa kawangis ng makasalanang laman at alang-alang sa kasalanan, at hinatulan ang kasalanan sa laman;","Upang ang katuwiran ng kautusan ay matupad sa atin, na hindi lumalakad ayon sa laman, kundi ayon sa Espiritu.","Sapagkat ang mga naaayon sa laman ay nagmamalasakit sa mga bagay ng laman; ngunit ang mga naaayon sa Espiritu ay nagmamalasakit sa mga bagay ng Espiritu.","Sapagkat ang iniisip ng laman ay kamatayan; ngunit ang iniisip ng Espiritu ay buhay at kapayapaan;","Dahil ang iniisip ng laman ay kaaway laban sa Diyos; sapagkat hindi ito sumusunod sa kautusan ng Diyos, at hindi rin ito makakasunod.","Kaya ang mga nasa laman ay hindi maaaring makalugod sa Diyos.","Ngunit kayo ay wala sa laman kundi sa Espiritu, kung ang Espiritu ng Diyos ay nananahan sa inyo. Kung ang sinuman ay walang Espiritu ni Cristo, siya ay hindi sa kanya.","At kung si Cristo ay nasa inyo, ang katawan ay patay dahil sa kasalanan; ngunit ang espiritu ay buhay dahil sa katuwiran.","Ngunit kung ang Espiritu niya na bumuhay kay Jesus mula sa mga patay ay nananahan sa inyo, ang bumuhay kay Cristo Jesus mula sa mga patay ay muling bubuhayin din ang inyong mortal na katawan sa pamamagitan ng kanyang Espiritu na nananahan sa inyo.","Kaya nga, mga kapatid, tayo ay may utang na loob, hindi sa laman, upang mabuhay ayon sa laman.","Sapagkat kung mabubuhay kayo ayon sa laman, mamamatay kayo; ngunit kung sa pamamagitan ng Espiritu ay pinapatay ninyo ang mga gawa ng katawan, mabubuhay kayo.","Sapagkat ang lahat ng pinapatnubayan ng Espiritu ng Diyos, sila ay mga anak ng Diyos.","Sapagkat hindi kayo nakatanggap ng espiritu ng pagkaalipin upang manumbalik sa takot; kundi nakatanggap kayo ng espiritu ng pag-ampon bilang mga anak, sa pamamagitan nito ay sumasigaw tayo, Abba, Ama.","Ang Espiritu mismo ay nagpapatotoo kasama ng ating espiritu na tayo ay mga anak ng Diyos;","At kung mga anak, ay mga tagapagmana rin; mga tagapagmana ng Diyos, at mga kapwa tagapagmana ni Cristo; kung kaya't nagdurusa tayo nang magkasama, upang tayo ay makaluwalhati rin nang magkasama.","Sapagkat inaakala ko na ang mga pagdurusa ng kasalukuyang panahon ay hindi karapat-dapat ikumpara sa kaluwalhatiang lilitaw sa atin.","Sapagkat ang buong nilalang ay naghihintay nang may pagnanasa sa pagpapakita ng mga anak ng Diyos.","Sapagkat ang nilalang ay napailalim sa walang kabuluhan, hindi ng kanyang sariling kagustuhan, kundi dahil sa kanya na nagpailalim nito, sa pag-asa","Na ang nilalang mismo ay mapapalaya rin mula sa pagkaalipin sa kabulukan patungo sa kalayaan ng kaluwalhatian ng mga anak ng Diyos.","Sapagkat alam namin na ang buong nilalang ay magkasamang dumadaing at nagdurusa ng mga hirap hanggang ngayon.","At hindi lamang sila, kundi tayo rin mismo na mayroon ng unang bunga ng Espiritu, tayo mismo ay dumadaing sa ating sarili, naghihintay ng pag-ampon, ang katubusan ng ating katawan.","Sapagkat tayo ay iniligtas sa pag-asa; ngunit ang pag-asa na nakikita ay hindi pag-asa; sapagkat sino ang umaasa para sa nakikita niya?","Ngunit kung umaasa tayo para sa hindi pa natin nakikita, naghihintay tayo nang may pagtitiyaga.","Gayon din naman ang Espiritu ay tumutulong sa ating kahinaan; sapagkat hindi natin alam kung paano natin dapat ipanalangin; ngunit ang Espiritu mismo ang nagmamakaawa para sa atin sa mga buntong-hininga na hindi maipahayag.","At ang naghahanap sa mga puso ay nakakaalam kung ano ang nasa isip ng Espiritu, dahil siya ay nagmamakaawa para sa mga banal ayon sa kalooban ng Diyos.","At nalalaman natin na ang lahat ng bagay ay nagtutulungan para sa ikabubuti ng mga nagmamahal sa Diyos, ng mga tinawag ayon sa kanyang layunin.","Sapagkat ang mga nakilala niya nang maaga, ay itinalaga rin niya nang maaga upang maging katulad ng larawan ng kanyang Anak, upang siya ay maging panganay sa maraming kapatid.","Bukod dito, ang mga itinalaga niya nang maaga ay tinawag din niya; at ang mga tinawag niya ay itinuring ding matuwid; at ang mga itinuring niyang matuwid ay niluwalhati rin niya.","Ano ang ating sasabihin sa mga bagay na ito? Kung ang Diyos ay para sa atin, sino ang laban sa atin?","Siya na hindi naglingid ng kanyang sariling Anak, kundi ibinigay siya para sa ating lahat, paano niya hindi ibibigay sa atin ang lahat ng bagay kasama niya?","Sino ang magsasampa ng paratang laban sa mga pinili ng Diyos? Ang Diyos ang nagpapawalang-sala;","Sino ang maghahatol? Si Cristo Jesus ang namatay, oo, higit pa, ang muling nabuhay, na nasa kanan ng Diyos, na nagmamakaawa rin para sa atin.","Sino ang makapaghihiwalay sa atin mula sa pagibig ni Cristo? Ang kapighatian, o kahirapan, o pag-uusig, o kagutuman, o kahubdan, o panganib, o tabak?","Gaya ng nasusulat, Dahil sa iyo ay pinapatay kami sa buong araw; kami ay itinuturing na mga tupa para sa patayan.","Hindi, sa lahat ng mga bagay na ito ay higit tayong nagtatagumpay sa pamamagitan niya na nagmahal sa atin.","Sapagkat natitiyak ko na kahit ang kamatayan, kahit ang buhay, kahit ang mga anghel, kahit ang mga pamunuan, kahit ang mga kapangyarihan, kahit ang mga bagay na kasalukuyan, kahit ang mga bagay na darating,","Kahit ang taas, kahit ang kailaliman, kahit ang alinmang ibang nilalang, ay hindi makakahiwalay sa atin mula sa pagibig ng Diyos, na nasa kay Cristo Jesus na ating Panginoon."],
+},
+"Philippians":{
+4:[" ","Kaya nga, aking mga minamahal at minamahal na kapatid, aking kagalakan at korona, sa ganitong paraan ay manatili kayong matatag sa Panginoon, aking mga minamahal.","Inaalab ko si Euodia, at inaalab ko si Syntyche, na magkaisa sa Panginoon.","Oo, at ikaw rin, tunay na kapwa ko manggagawa, hinihiling ko sa iyo na tulungan ang mga babaeng ito na nakipagsumikap kasama ko sa ebanghelyo, kasama rin ni Clemente at ng aking mga kapwa manggagawa na ang mga pangalan ay nasa aklat ng buhay.","Magalak kayo sa Panginoon palagi; at uulitin ko, magalak kayo.","Ang inyong katamisan ay mapakilala sa lahat ng tao. Ang Panginoon ay malapit.","Huwag kayong mag-alala tungkol sa anumang bagay; kundi sa bawat bagay sa pamamagitan ng pananalangin at pagsusumamo na may pagpapasalamat ay ipaalam ninyo sa Diyos ang inyong mga kahilingan.","At ang kapayapaan ng Diyos na lumalagpas sa lahat ng pag-unawa ay mag-iingat ng inyong mga puso at ng inyong mga isipan kay Cristo Jesus.","Sa wakas, mga kapatid, kung anumang bagay ay totoo, kung anumang bagay ay marangal, kung anumang bagay ay matuwid, kung anumang bagay ay malinis, kung anumang bagay ay kaibig-ibig, kung anumang bagay ay may mabuting ulat, kung mayroon mang kabutihan at kung mayroon mang papuri, isipin ninyo ang mga bagay na ito.","Ang mga bagay na inyong natutuhan, at natanggap, at narinig, at nakita sa akin, gawin ninyo; at ang Diyos ng kapayapaan ay sasamahan kayo.","Ngunit nagagalak ako nang lubos sa Panginoon na ang inyong pag-aalaga sa akin ay namukadkad muli; kung saan ay nagaalaga rin kayo, ngunit kulang ng pagkakataon.","Hindi ko sinasabi ito dahil sa pangangailangan; sapagkat natutuhan ko kung paano maging masaya sa anumang kalagayan na aking kinalalagyan.","Alam ko kung paano mapahina, at alam ko rin kung paano yumaman; sa lahat ng paraan at sa lahat ng bagay, natutuhan ko ang susi, kapwa mabusog at magutom, kapwa may kasaganaan at magkukulang.","Kaya ko ang lahat ng bagay sa pamamagitan ni Cristo na nagpapalakas sa akin.","Gayon man ay mabuti ang ginawa ninyo, na nakiisa sa aking kapighatian.","Alam din ninyo, mga taga-Filipos, na sa pasimula ng ebanghelyo, nang lumabas ako mula sa Macedonia, walang simbahan ang nakiisa sa akin sa bagay ng pagbibigay at pagtanggap kundi kayo lamang.","Sapagkat maging sa Tesalonica ay nagpadala kayo nang minsan at dalawang beses para sa aking pangangailangan.","Hindi ko hinihangad ang kaloob; kundi hinahangad ko ang bunga na dumarami sa inyong kapakanan.","Ngunit natanggap ko ang lahat at nagkasagana; napuno ako pagkatapos matanggap mula kay Epaprodito ang mga bagay na isinugo ninyo, isang mabangong halimuyak, isang tinanggap na handog, kalugud-lugod sa Diyos.","Ngunit ang aking Diyos ay magbibigay ng lahat ng inyong pangangailangan ayon sa kanyang kayamanan sa kaluwalhatian kay Cristo Jesus.","Ngayon sa aming Diyos at Ama ay ang kaluwalhatian magpakailanman at kailanman. Amen."],
+},
+"James":{
+1:[" ","Si Santiago, isang alipin ng Diyos at ng Panginoong Jesu-Cristo, sa labindalawang lipi na nagkakawatak-watak, pagbati.","Ituring ninyong buong kagalakan, aking mga kapatid, kung kayo ay nahulog sa iba't ibang tukso;","Yamang nalalaman ninyo na ang pagsubok ng inyong pananampalataya ay nagbubunga ng pagtitiis.","Ngunit hayaan ang pagtitiis na magkaroon ng ganap na gawa, upang kayo ay maging ganap at buo, na walang anumang pinagkukulangan.","Kung ang sinuman sa inyo ay nagkukulang ng karunungan, humingi siya sa Diyos na nagbibigay nang sagana sa lahat at hindi nangungutya; at ibibigay ito sa kanya.","Ngunit humingi siya nang may pananampalataya, na walang pagdududa; sapagkat ang nagdududa ay katulad ng alon ng dagat na itinataboy ng hangin at tinataboy.","Sapagkat huwag hayaan ng taong iyon na siya ay makatanggap ng anumang bagay mula sa Panginoon.","Ang isang taong may dalawang isip ay hindi matatag sa lahat ng kanyang mga paraan."],
+},
+"1 John":{
+4:[" ","Mga minamahal, huwag ninyong paniwalaan ang bawat espiritu, kundi subukan ninyo ang mga espiritu kung sila ay mula sa Diyos; sapagkat maraming huwad na propeta ang lumabas sa sanlibutan.","Sa ganito ninyo malalaman ang Espiritu ng Diyos: Ang bawat espiritu na nagpapahayag na si Jesu-Cristo ay naparito sa laman ay mula sa Diyos;","At ang bawat espiritu na hindi nagpapahayag na si Jesus ay hindi mula sa Diyos; at ito ang espiritu ng anticristo, na inyong narinig na darating, at ngayon ay nasa sanlibutan na.","Kayo ay mula sa Diyos, maliliit na mga anak, at inyong nalupig sila; sapagkat mas dakila siya na nasa inyo kaysa sa nasa sanlibutan.","Sila ay mula sa sanlibutan; kaya naman nagsasalita sila mula sa sanlibutan, at ang sanlibutan ay nakikinig sa kanila.","Tayo ay mula sa Diyos; ang nakakakilala sa Diyos ay nakikinig sa atin; ang hindi mula sa Diyos ay hindi nakikinig sa atin. Sa pamamagitan nito ay nalalaman natin ang espiritu ng katotohanan at ang espiritu ng kamalian.","Mga minamahal, magibigan tayo sa isa't isa; sapagkat ang pagibig ay mula sa Diyos; at ang bawat isang nagmamahal ay ipinanganak ng Diyos at nakakakilala sa Diyos.","Ang hindi nagmamahal ay hindi nakakakilala sa Diyos; sapagkat ang Diyos ay pagibig.","Sa ganito ay nahayag ang pagibig ng Diyos sa atin, na sinugo ng Diyos ang kanyang bugtong na Anak sa sanlibutan upang tayo ay mabuhay sa pamamagitan niya.","Dito naroroon ang pagibig, hindi na tayo ang nagmahal sa Diyos, kundi siya ang nagmahal sa atin, at sinugo ang kanyang Anak bilang pangpalubag-loob para sa ating mga kasalanan.","Mga minamahal, kung gayon nagmahal sa atin ang Diyos, dapat din tayong magibigan sa isa't isa.","Walang sinumang nakakita sa Diyos kailanman; kung nagibigan tayo sa isa't isa, ang Diyos ay nananahan sa atin, at ang kanyang pagibig ay nagiging ganap sa atin.","Sa ganito ay nalalaman natin na nananahan tayo sa kanya at siya sa atin, dahil ibinigay niya sa atin ang kanyang Espiritu.","At nakita namin at nagpapatotoo na ang Ama ay nagsugo ng Anak bilang Tagapagligtas ng sanlibutan.","Ang sinumang magpahayag na si Jesus ay Anak ng Diyos, ang Diyos ay nananahan sa kanya, at siya sa Diyos.","At nakilala namin at naniniwala kami sa pagibig na mayroon ang Diyos para sa atin. Ang Diyos ay pagibig; at ang nananatili sa pagibig ay nananatili sa Diyos, at ang Diyos ay nananatili sa kanya.","Dito ang pagibig ay ginawang ganap sa atin, upang magkaroon tayo ng katapangang pangahas sa araw ng paghuhukom; sapagkat kung paano siya, gayon din tayo sa mundong ito.","Walang takot sa pagibig; kundi ang ganap na pagibig ay nagtatataboy ng takot; sapagkat ang takot ay may kaparusahan; at ang natatakot ay hindi pa ganap sa pagibig.","Iniibig natin siya, dahil siya muna ang nagmahal sa atin.","Kung ang sinuman ay magsabi, Iniibig ko ang Diyos, at napopoot sa kanyang kapatid, siya ay sinungaling; sapagkat ang hindi nagmamahal sa kanyang kapatid na kanyang nakita, paano niya maibig ang Diyos na hindi niya nakita?","At ang utos na ito ay mayroon tayo mula sa kanya, na ang nagmamahal sa Diyos ay dapat ding ibigin ang kanyang kapatid."],
+}
+};
+
+function getTLVerse(book, chap, verse) {
+  if(TL_BIBLE[book] && TL_BIBLE[book][chap] && TL_BIBLE[book][chap][verse]) {
+    return TL_BIBLE[book][chap][verse];
+  }
+  return null;
+}
+
+function hasTLData(book) {
+  return !!TL_BIBLE[book];
+}
+
+
+var lang = 'en';
+var prayers = [];
+var entries = [];
+var streak = 1;
+var checkedToday = false;
+var showRefl = false;
+var bVer = 'kjv';
+var bBook = '';
+var bChap = 0;
+var bVerse = null;
+var bVerseText = '';
+var bCache = {};
+var hlData = {};
+
+// ============================================================
+// FIREBASE + AUTH
+// ============================================================
+var db, auth, currentUser = null;
+var fsUnsub = []; // firestore unsubscribers
+
+// localStorage keys scoped to user
+function lsKey(k){ return currentUser ? currentUser.uid+'_'+k : k; }
+
+function initFirebase(){
+  firebase.initializeApp({
+    apiKey:"AIzaSyBzqbfuRgG3MPP5vbACkxSGqsQtcZ2ZB0k",
+    authDomain:"devotion-app-23edb.firebaseapp.com",
+    projectId:"devotion-app-23edb",
+    storageBucket:"devotion-app-23edb.firebasestorage.app",
+    messagingSenderId:"914968264593",
+    appId:"1:914968264593:web:f933fe4eab380091642430"
+  });
+  db = firebase.firestore();
+  auth = firebase.auth();
+
+  auth.onAuthStateChanged(function(user){
+    if(user){
+      currentUser = user;
+      document.getElementById('login-screen').classList.add('hidden');
+      // Show avatar
+      var av = document.getElementById('user-avatar');
+      if(user.photoURL){ av.src=user.photoURL; av.style.display='block'; }
+      document.getElementById('user-email').textContent = user.email||user.displayName||'';
+      // Load user data
+      loadUserData();
+      renderAll();
+    } else {
+      currentUser = null;
+      // Unsubscribe all listeners
+      fsUnsub.forEach(function(u){try{u();}catch(e){}});
+      fsUnsub=[];
+      document.getElementById('login-screen').classList.remove('hidden');
+      document.getElementById('user-avatar').style.display='none';
+    }
+  });
+}
+
+function userCol(col){
+  return db.collection('users').doc(currentUser.uid).collection(col);
+}
+
+function loadUserData(){
+  // Unsubscribe previous listeners
+  fsUnsub.forEach(function(u){try{u();}catch(e){}});
+  fsUnsub=[];
+
+  // Load lang/streak from localStorage
+  lang = localStorage.getItem(lsKey('dl'))||'en';
+  streak = parseInt(localStorage.getItem(lsKey('ds'))||'1');
+  checkedToday = localStorage.getItem(lsKey('dd'))===new Date().toDateString();
+
+  // Entries
+  var u1=userCol('entries').onSnapshot(function(snap){
+    entries=[];
+    snap.forEach(function(d){entries.push(d.data());});
+    entries.sort(function(a,b){return a.id-b.id;});
+    renderEntries();
+  });
+  fsUnsub.push(u1);
+
+  // Prayers
+  var u2=userCol('prayers').onSnapshot(function(snap){
+    prayers=[];
+    snap.forEach(function(d){prayers.push(d.data());});
+    prayers.sort(function(a,b){return b.id-a.id;});
+    renderPrayers();
+  });
+  fsUnsub.push(u2);
+
+  // Streak
+  userCol('meta').doc('streak').get().then(function(d){
+    if(d.exists){
+      var data=d.data();
+      streak=data.count||1;
+      checkedToday=data.lastDate===new Date().toDateString();
+      showRefl=checkedToday;
+      renderStreak(); renderVerse();
+    }
+  });
+
+  // Load highlights from localStorage (keyed by uid)
+  try{ hlData=JSON.parse(localStorage.getItem(lsKey('hl'))||'{}'); }catch(e){ hlData={}; }
+  try{ bCache=JSON.parse(localStorage.getItem(lsKey('bc'))||'{}'); }catch(e){ bCache={}; }
+  // Acts prayers
+  try{ /* rendered on tab open */ }catch(e){}
+}
+
+function signInWithGoogle(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  auth.signInWithPopup(provider).catch(function(e){ alert('Sign-in failed: '+e.message); });
+}
+
+function signOutUser(){
+  toggleUserMenu();
+  auth.signOut();
+}
+
+function toggleUserMenu(){
+  document.getElementById('user-menu').classList.toggle('show');
+}
+document.addEventListener('click',function(e){
+  var menu=document.getElementById('user-menu');
+  if(menu&&!menu.contains(e.target)&&e.target!==document.getElementById('user-avatar')){
+    menu.classList.remove('show');
+  }
+});
+
+try { initFirebase(); } catch(e){ console.log('Firebase error:',e); }
+
+// ============================================================
+// SYNC HELPER
+// ============================================================
+function syncBar(msg,ok){
+  var el=document.getElementById('sync-bar');
+  el.textContent=msg;
+  el.style.background=ok===false?'var(--rose)':'var(--sage)';
+  el.style.display='block';
+  clearTimeout(el._t);
+  el._t=setTimeout(function(){el.style.display='none';},2000);
+}
+
+// ============================================================
+// CLOCK
+// ============================================================
+function tick(){
+  var n=new Date();
+  document.getElementById('clock').textContent=n.getHours()+':'+(n.getMinutes()<10?'0':'')+n.getMinutes();
+}
+setInterval(tick,1000); tick();
+
+
+// ============================================================
+// WRITE TAB — MULTI-VERSE PICKER
+// ============================================================
+var verseRows = []; // [{id, book, chap, verses, fromV, toV, chapVerses}]
+var verseRowCounter = 0;
+
+function initWriteBooks(){
+  // verses come from highlights picker only
+  renderVerseRows();
+}
+
+function addVerseRow(){
+  // no-op — verses only come from highlights picker
+}
+
+function removeVerseRow(id){
+  verseRows=verseRows.filter(function(r){return r.id!==id;});
+  renderVerseRows();
+  updateCombinedDisplay();
+}
+
+// Each row = {id, book, chap, verse(n), text}
+function renderVerseRows(){
+  var container=document.getElementById('verse-rows-container');
+  if(!container) return;
+  container.innerHTML='';
+  if(!verseRows.length) return;
+  verseRows.forEach(function(row){
+    var div=document.createElement('div');
+    div.className='verse-row-card';
+    div.style.cssText='position:relative;padding:10px 36px 10px 12px;margin-bottom:8px;';
+    var ref=row.book+' '+row.chap+':'+row.verse;
+    var txt=(row.text||'').replace(/</g,'&lt;');
+    div.innerHTML='<button class="verse-row-del" onclick="removeVerseRow(\''+row.id+'\')" style="position:absolute;top:8px;right:8px;">✕</button>'
+      +'<div class="verse-row-ref-tag" style="margin-bottom:4px;">'+ref+'</div>'
+      +'<div style="font-family:\'EB Garamond\',serif;font-size:15px;font-style:italic;color:var(--ink);line-height:1.5;">'
+      +'<sup style="font-size:10px;color:var(--sage);font-family:sans-serif;">'+row.verse+'</sup> '+txt
+      +'</div>';
+    container.appendChild(div);
+  });
+}
+
+function updateCombinedDisplay(){
+  var refParts=[], allText='';
+  verseRows.forEach(function(row){
+    if(!row.book||!row.chap||!row.verse) return;
+    refParts.push(row.book+' '+row.chap+':'+row.verse);
+    if(allText) allText+=' ';
+    allText+=row.text||'';
+  });
+  var rd=document.getElementById('jref-display');
+  if(rd){
+    if(refParts.length){rd.textContent=refParts.join(' • ');rd.classList.add('has-ref');}
+    else{rd.textContent='';rd.classList.remove('has-ref');}
+  }
+  window._combinedVerseText=allText;
+  window._combinedVerseRef=refParts.join(' • ');
+}
+
+// Reflection guide chips
+function insertReflectionGuide(type){
+  var editor=document.getElementById('jd');
+  if(!editor) return;
+  editor.focus();
+  var templates={
+    observe:'<p><strong>📖 OBSERVE</strong></p><p>Ano ang nakikita mo sa talatang ito? Sino ang mga tauhan? Ano ang nangyayari?</p><p><br></p>',
+    interpret:'<p><strong>🔍 INTERPRET</strong></p><p>Ano ang ibig sabihin ng talatang ito? Bakit ito sinulat? Anong mensahe ang nais iparating ng Diyos?</p><p><br></p>',
+    apply:'<p><strong>✅ APPLY</strong></p><p>Paano mo ilalapat ang mensaheng ito sa iyong buhay ngayon? Anong pagbabago ang gagawin mo?</p><p><br></p>',
+    oiaformat:'<p><strong>📖 OBSERVE</strong></p><p>Isulat dito ang iyong mga obserbasyon…</p><p><br></p><p><strong>🔍 INTERPRET</strong></p><p>Isulat dito ang iyong interpretasyon…</p><p><br></p><p><strong>✅ APPLY</strong></p><p>Isulat dito kung paano mo ilalapat…</p><p><br></p>'
+  };
+  if(templates[type]) editor.innerHTML=(editor.innerHTML.trim()?editor.innerHTML:'') + templates[type];
+  // Move cursor to end
+  var range=document.createRange(); range.selectNodeContents(editor); range.collapse(false);
+  var sel=window.getSelection(); sel.removeAllRanges(); sel.addRange(range);
+}
+
+
+
+// ============================================================
+// RENDER
+// ============================================================
+function renderAll(){renderTexts();renderDate();renderVerse();renderStreak();renderPrayers();renderEntries();}
+
+function renderDate(){
+  document.getElementById('hd').textContent=new Date().toLocaleDateString(lang==='en'?'en-US':'fil-PH',{weekday:'long',month:'long',day:'numeric'});
+}
+
+function renderVerse(){
+  var d=Math.floor((new Date()-new Date('2024-01-01'))/86400000);
+  var v=VERSES[d%VERSES.length];
+  document.getElementById('vt').textContent='"'+(lang==='en'?v.en:v.tl)+'"';
+  document.getElementById('vr').textContent=v.ref;
+  document.getElementById('rt2').textContent=lang==='en'?v.re:v.rt;
+  var btn=document.getElementById('rbtn');
+  var ra=document.getElementById('refl-area');
+  if(showRefl){ra.classList.add('show');btn.style.display='none';}
+  else{ra.classList.remove('show');btn.textContent=lang==='en'?'Read & Reflect':'Basahin at Pagnilayan';btn.style.display='block';}
+}
+
+function renderStreak(){
+  document.getElementById('snum').textContent=streak;
+  document.getElementById('snum2').textContent=streak;
+  document.getElementById('sdl').textContent=lang==='en'?(streak===1?'day':'days'):(streak===1?'araw':'mga araw');
+  document.getElementById('sd2').textContent=lang==='en'?'day streak':'araw na sunod-sunod';
+  var days=['S','M','T','W','T','F','S'];
+  var today=new Date().getDay();
+  var html='';
+  for(var i=0;i<7;i++){
+    var done=i<today||(i===today&&checkedToday);
+    var isToday=i===today;
+    html+='<div class="wday"><div class="wday-label">'+days[i]+'</div><div class="wday-dot'+(done?' done':'')+(isToday?' today':'')+'">'+( done?'✓':'')+'</div></div>';
+  }
+  document.getElementById('wrow').innerHTML=html;
+}
+
+function renderEntries(){
+  var el=document.getElementById('elist');
+  if(!entries.length){el.innerHTML='<div class="empty-state">'+(lang==='en'?'No devotions yet. Start writing! ✦':'Wala pang devotion. Magsimula nang sumulat! ✦')+'</div>';return;}
+  var html='';
+  var rev=[].concat(entries).reverse();
+  rev.forEach(function(e){
+    html+='<div class="ecard" onclick="openEntry('+e.id+')">'
+      +'<div class="edate">'+(e.dlabel||e.date)+'</div>'
+      +(e.verse?'<div class="etitle">'+e.verse.substring(0,60)+(e.verse.length>60?'…':'')+'</div>':'')
+      +(e.ref?'<div class="evprev">'+e.ref+'</div>':'')
+      +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">'
+      +'<div class="etags"><span class="etag '+(e.verse?'on':'')+'">Verse</span><span class="etag '+(e.reflection?'on':'')+'">Reflection</span><span class="etag '+(e.prayer?'on':'')+'">Prayer</span></div>'
+      +'<button onclick="event.stopPropagation();delEntry('+e.id+')" style="background:none;border:none;color:var(--linen);font-size:18px;cursor:pointer;padding:2px 6px;">✕</button>'
+      +'</div></div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderPrayers(){
+  var el=document.getElementById('plist');
+  if(!prayers.length){el.innerHTML='<div class="empty-state">'+(lang==='en'?'Add your first prayer request ✦':'Idagdag ang iyong unang panalangin ✦')+'</div>';return;}
+  var html='';
+  prayers.forEach(function(p){
+    html+='<div class="pitem">'
+      +'<div class="pcheck'+(p.done?' done':'')+('" onclick="togglePrayer('+p.id+')">')+(p.done?'✓':'')+'</div>'
+      +'<div class="ptext'+(p.done?' done':'')+'">'+p.text+'<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:1px;color:var(--stone);margin-top:3px;">'+p.date+'</div></div>'
+      +'<button class="pdel" onclick="delPrayer('+p.id+')">✕</button>'
+      +'</div>';
+  });
+  el.innerHTML=html;
+}
+
+function renderTexts(){
+  var e=lang==='en';
+  function s(id,txt){var el=document.getElementById(id);if(el)el.textContent=txt;}
+  s('vl',e?'✦ Verse of the Day':'✦ Talata ng Araw');
+  s('rl',e?'Reflection':'Pagninilay');
+  s('rbtn',showRefl?'':(e?'Read & Reflect':'Basahin at Pagnilayan'));
+  s('stl',e?'Streak':'Sunod-sunod');
+  s('qpl',e?'Morning Prayer':'Pananalangin sa Umaga');
+  s('qpt',e?'Lord, thank You for this new day. Guide my steps, guard my heart, and let Your will be done in my life today. Amen.':'Panginoon, salamat sa bagong araw na ito. Gabayan Mo ang aking mga hakbang, pangalagaan ang aking puso, at nawa ang Iyong kalooban ang mangyari sa aking buhay ngayon. Amen.');
+  s('wtl',e?'Write Your Devotion':'Isulat ang Iyong Debosyon');
+  s('wv',e?'Bible Verse':'Talatang Bibliya');
+  s('wd',e?'My Reflection':'Aking Pagninilay');
+  s('wp',e?'My Prayer':'Aking Panalangin');
+  s('sbtn',e?'Save Devotion':'I-save ang Debosyon');
+  s('cbtn',e?'Clear':'I-clear');
+  var vd=document.getElementById('jverse-display');
+  if(vd)vd.setAttribute('data-placeholder',e?'Select a book, chapter and verse above…':'Pumili ng libro, kabanata at talata sa itaas…');
+  s('jtl',e?'My Journal':'Aking Journal');
+  s('ptl',e?'Prayer List':'Listahan ng Panalangin');
+  var pi=document.getElementById('pinput');if(pi)pi.placeholder=e?'Add a prayer request…':'Magdagdag ng kahilingang panalangin…';
+  s('btabl',e?'✦ Bible':'✦ Biblia');
+  s('hltl',e?'✦ My Highlights':'✦ Aking mga Highlight');
+  s('remtl',e?'Daily Reminder':'Paalala sa Araw-araw');
+  s('remsl',e?'Set your devotion time':'Itakda ang oras ng iyong debosyon');
+  s('rembtn',e?'Save':'I-save');
+  s('tipt',e?'Consistency is key. A few minutes each morning with God can transform your entire day.':'Ang pagpapatuloy ay susi. Ilang minuto lang kasama ang Diyos tuwing umaga ay makapagbabago ng iyong buong araw.');
+  s('nl-home',e?'Today':'Ngayon');
+  s('nl-write',e?'Write':'Sulat');
+  s('nl-entries',e?'Journal':'Journal');
+  s('nl-prayer',e?'Prayer':'Dasal');
+  s('nl-bible',e?'Bible':'Biblia');
+  s('nl-highlights',e?'Highlights':'Highlights');
+  s('nl-alarm',e?'Alarm':'Paalala');
+  s('mcbtn',e?'Close':'Isara');
+  s('ml-v',e?'Verse':'Talata');
+  s('ml-r',e?'Reflection':'Pagninilay');
+  s('ml-p',e?'Prayer':'Panalangin');
+  s('mtitle',e?'My Devotion':'Aking Debosyon');
+}
+
+// ============================================================
+// ACTIONS
+// ============================================================
+function setLang(l){
+  lang=l;
+  localStorage.setItem(lsKey('dl'),l);
+  document.getElementById('ben').classList.toggle('active',l==='en');
+  document.getElementById('btl').classList.toggle('active',l==='tl');
+  renderAll();
+}
+
+function fmt(e,cmd){e.preventDefault();document.execCommand(cmd,false,null);}
+
+function markRead(){
+  if(!checkedToday){
+    streak++; checkedToday=true;
+    localStorage.setItem(lsKey('ds'),streak);
+    localStorage.setItem(lsKey('dd'),new Date().toDateString());
+    if(db&&currentUser){userCol('meta').doc('streak').set({count:streak,lastDate:new Date().toDateString()});}
+  }
+  showRefl=true; renderVerse(); renderStreak();
+}
+
+function saveEntry(){
+  var v=window._combinedVerseText||'';
+  var ref=window._combinedVerseRef||'';
+  var rhtml=document.getElementById('jd').innerHTML.trim();
+  var phtml=document.getElementById('jp').innerHTML.trim();
+  var rtext=document.getElementById('jd').innerText.trim();
+  if(!v&&!rtext&&!document.getElementById('jp').innerText.trim()){
+    alert(lang==='en'?'Please write something first.':'Mangyaring sumulat muna.');return;
+  }
+  var now=new Date();
+  var entry={
+    id:Date.now(),date:now.toDateString(),
+    dlabel:now.toLocaleDateString(lang==='en'?'en-US':'fil-PH',{weekday:'short',year:'numeric',month:'short',day:'numeric'}),
+    verse:v,ref:ref,reflection:rhtml,prayer:phtml
+  };
+  if(db&&currentUser){
+    userCol('entries').doc(String(entry.id)).set(entry).then(function(){syncBar(lang==='en'?'✓ Saved':'✓ Nai-save');});
+  }
+  if(!checkedToday){
+    streak++;checkedToday=true;
+    localStorage.setItem(lsKey('ds'),streak);localStorage.setItem(lsKey('dd'),now.toDateString());
+    if(db&&currentUser){userCol('meta').doc('streak').set({count:streak,lastDate:now.toDateString()});}
+  }
+  clearForm();renderStreak();switchTab('entries');
+}
+
+function clearForm(){
+  verseRows=[]; verseRowCounter=0;
+  window._combinedVerseText=''; window._combinedVerseRef='';
+  renderVerseRows();
+  var rd=document.getElementById('jref-display');
+  if(rd){rd.textContent='';rd.classList.remove('has-ref');}
+  var vd=document.getElementById('jverse-display');
+  if(vd)vd.innerHTML='';
+  document.getElementById('jd').innerHTML='';
+  document.getElementById('jp').innerHTML='';
+}
+
+function delEntry(id){
+  if(!confirm(lang==='en'?'Delete this devotion?':'Burahin ang devotion na ito?'))return;
+  if(db&&currentUser){userCol('entries').doc(String(id)).delete();}
+}
+
+var currentModalEntry=null;
+
+function openEntry(id){
+  var e=entries.find(function(x){return x.id===id;});
+  if(!e)return;
+  currentModalEntry=e;
+  document.getElementById('mdate').textContent=e.dlabel||e.date;
+  document.getElementById('mv').textContent=e.verse?'"'+e.verse+'"':'—';
+  document.getElementById('mr').textContent=e.ref||'';
+  document.getElementById('md').innerHTML=e.reflection||'—';
+  document.getElementById('mp').innerHTML=e.prayer||'—';
+  document.getElementById('moverlay').classList.add('show');
+}
+function closeModal(){document.getElementById('moverlay').classList.remove('show');}
+
+// ============================================================
+// PDF / IMAGE EXPORT
+// ============================================================
+function buildExportHTML(e){
+  return '<div id="export-content" style="font-family:Georgia,serif;background:#FAF7F2;padding:40px;width:600px;box-sizing:border-box;color:#3A3530;">'
+    +'<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7A9E8A;margin-bottom:4px;">Daily Devotion</div>'
+    +'<div style="font-size:13px;font-family:Arial,sans-serif;letter-spacing:1px;color:#8C8070;margin-bottom:24px;">'+(e.dlabel||e.date)+'</div>'
+    +(e.ref?'<div style="font-size:12px;font-family:Arial,sans-serif;letter-spacing:1.5px;text-transform:uppercase;color:#B8965A;margin-bottom:8px;">'+e.ref+'</div>':'')
+    +(e.verse?'<div style="font-size:18px;font-style:italic;line-height:1.7;border-left:3px solid #7A9E8A;padding-left:16px;margin-bottom:24px;color:#3A3530;">&ldquo;'+e.verse+'&rdquo;</div>':'')
+    +'<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7A9E8A;margin-bottom:8px;">My Reflection</div>'
+    +'<div style="font-size:15px;line-height:1.8;margin-bottom:24px;">'+(e.reflection||'—')+'</div>'
+    +'<div style="font-size:11px;letter-spacing:2px;text-transform:uppercase;color:#7A9E8A;margin-bottom:8px;">My Prayer</div>'
+    +'<div style="font-size:15px;line-height:1.8;">'+(e.prayer||'—')+'</div>'
+    +'<div style="margin-top:32px;border-top:1px solid #DDD8CE;padding-top:12px;font-size:10px;font-family:Arial,sans-serif;color:#B0A898;text-align:center;">Daily Devotion App ✦</div>'
+    +'</div>';
+}
+
+function exportEntryPDF(){
+  if(!currentModalEntry){return;}
+  var status=document.getElementById('export-status');
+  status.style.display='block'; status.textContent='⏳ Generating PDF…';
+  var e=currentModalEntry;
+  // Create temp container
+  var tmp=document.createElement('div');
+  tmp.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  tmp.innerHTML=buildExportHTML(e);
+  document.body.appendChild(tmp);
+  var el=tmp.querySelector('#export-content');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#FAF7F2'}).then(function(canvas){
+    document.body.removeChild(tmp);
+    var imgData=canvas.toDataURL('image/jpeg',0.92);
+    var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'px',format:[canvas.width/2,canvas.height/2]});
+    pdf.addImage(imgData,'JPEG',0,0,canvas.width/2,canvas.height/2);
+    var fname='devotion-'+(e.date||'entry').replace(/[^a-z0-9]/gi,'-')+'.pdf';
+    pdf.save(fname);
+    status.textContent='✓ PDF downloaded!';
+    setTimeout(function(){status.style.display='none';},3000);
+  }).catch(function(err){
+    document.body.removeChild(tmp);
+    status.textContent='⚠️ Error: '+err.message;
+  });
+}
+
+function exportEntryImage(){
+  if(!currentModalEntry){return;}
+  var status=document.getElementById('export-status');
+  status.style.display='block'; status.textContent='⏳ Generating image…';
+  var e=currentModalEntry;
+  var tmp=document.createElement('div');
+  tmp.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  tmp.innerHTML=buildExportHTML(e);
+  document.body.appendChild(tmp);
+  var el=tmp.querySelector('#export-content');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#FAF7F2'}).then(function(canvas){
+    document.body.removeChild(tmp);
+    var link=document.createElement('a');
+    link.download='devotion-'+(e.date||'entry').replace(/[^a-z0-9]/gi,'-')+'.jpg';
+    link.href=canvas.toDataURL('image/jpeg',0.92);
+    link.click();
+    status.textContent='✓ Image downloaded!';
+    setTimeout(function(){status.style.display='none';},3000);
+  }).catch(function(err){
+    document.body.removeChild(tmp);
+    status.textContent='⚠️ Error: '+err.message;
+  });
+}
+
+// ============================================================
+// ACTS PRAYER FUNCTIONS
+// ============================================================
+var lastActsSection=null;
+
+function actsFmt(event,cmd){
+  event.preventDefault();
+  if(lastActsSection) lastActsSection.focus();
+  document.execCommand(cmd,false,null);
+}
+
+function initPrayerTab(){
+  var today=new Date();
+  var days=['Linggo','Lunes','Martes','Miyerkules','Huwebes','Biyernes','Sabado'];
+  var months=['Enero','Pebrero','Marso','Abril','Mayo','Hunyo','Hulyo','Agosto','Setyembre','Oktubre','Nobyembre','Disyembre'];
+  var lbl=document.getElementById('prayer-date-label');
+  if(lbl) lbl.textContent=days[today.getDay()]+', '+months[today.getMonth()]+' '+today.getDate()+', '+today.getFullYear();
+  // track last focused section
+  ['acts-a','acts-c','acts-t','acts-s'].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.addEventListener('focus',function(){lastActsSection=el;});
+  });
+  renderSavedPrayers();
+}
+
+function savePrayer(){
+  var title=document.getElementById('prayer-title').value.trim();
+  var a=document.getElementById('acts-a').innerHTML.trim();
+  var c=document.getElementById('acts-c').innerHTML.trim();
+  var t=document.getElementById('acts-t').innerHTML.trim();
+  var s=document.getElementById('acts-s').innerHTML.trim();
+  if(!a&&!c&&!t&&!s){alert('Walang laman ang panalangin.');return;}
+  var entry={id:Date.now(),title:title||'Panalangin',date:new Date().toLocaleDateString('en-PH',{year:'numeric',month:'long',day:'numeric'}),a:a,c:c,t:t,s:s};
+  var saved=JSON.parse(localStorage.getItem(lsKey('acts_prayers'))||'[]');
+  saved.unshift(entry);
+  localStorage.setItem(lsKey('acts_prayers'),JSON.stringify(saved));
+  var btn=document.getElementById('save-prayer-btn');
+  btn.textContent='✓ Nai-save!';
+  setTimeout(function(){btn.textContent='💾 I-save';},2000);
+  renderSavedPrayers();
+}
+
+function renderSavedPrayers(){
+  var list=document.getElementById('plist');
+  if(!list)return;
+  var saved=JSON.parse(localStorage.getItem(lsKey('acts_prayers'))||'[]');
+  if(!saved.length){list.innerHTML='<div style="font-family:Jost,sans-serif;font-size:12px;color:var(--stone);text-align:center;padding:16px;">Wala pang nakaraang panalangin.</div>';return;}
+  list.innerHTML=saved.map(function(e){
+    var preview='';
+    if(e.a) preview+='<b>A:</b> '+e.a.replace(/<[^>]+>/g,'').substring(0,50)+'… ';
+    if(e.s) preview+='<b>S:</b> '+e.s.replace(/<[^>]+>/g,'').substring(0,50)+'…';
+    return '<div class="saved-prayer-card">'
+      +'<button class="saved-prayer-del" onclick="delSavedPrayer('+e.id+')">✕</button>'
+      +'<div style="font-family:\'Playfair Display\',serif;font-size:15px;color:var(--ink);margin-bottom:2px;">'+(e.title||'Panalangin')+'</div>'
+      +'<div class="saved-prayer-date">'+e.date+'</div>'
+      +'<div class="saved-prayer-preview">'+preview+'</div>'
+      +'</div>';
+  }).join('');
+}
+
+function delSavedPrayer(id){
+  var saved=JSON.parse(localStorage.getItem(lsKey('acts_prayers'))||'[]').filter(function(e){return e.id!==id;});
+  localStorage.setItem(lsKey('acts_prayers'),JSON.stringify(saved));
+  renderSavedPrayers();
+}
+
+function copyFullPrayer(){
+  var sections=[
+    {label:'ADORATION',id:'acts-a'},
+    {label:'CONFESSION',id:'acts-c'},
+    {label:'THANKSGIVING',id:'acts-t'},
+    {label:'SUPPLICATION',id:'acts-s'}
+  ];
+  var text=sections.map(function(s){
+    var el=document.getElementById(s.id);
+    var content=el?el.innerText.trim():'';
+    return content?'[ '+s.label+' ]\n'+content:'';
+  }).filter(Boolean).join('\n\n');
+  if(!text){alert('Walang laman.');return;}
+  navigator.clipboard.writeText(text).catch(function(){
+    var ta=document.createElement('textarea');ta.value=text;
+    document.body.appendChild(ta);ta.select();document.execCommand('copy');document.body.removeChild(ta);
+  });
+  var btn=event.target;btn.textContent='✓ Copied!';setTimeout(function(){btn.textContent='📋 Copy';},2000);
+}
+
+function clearPrayer(){
+  if(!confirm('I-clear ang lahat ng laman?'))return;
+  var titleEl=document.getElementById('prayer-title');
+  if(titleEl) titleEl.value='';
+  ['acts-a','acts-c','acts-t','acts-s'].forEach(function(id){
+    var el=document.getElementById(id);if(el)el.innerHTML='';
+  });
+}
+
+function addPrayer(){} // kept for compatibility
+function togglePrayer(id){}
+function delPrayer(id){}
+
+
+
+function saveReminder(){
+  var t=document.getElementById('remtime').value;
+  localStorage.setItem(lsKey('dr'),t);
+  if('Notification' in window){
+    Notification.requestPermission().then(function(p){if(p==='granted')schedNotif(t);});
+  }
+  var btn=document.getElementById('rembtn');
+  btn.textContent=lang==='en'?'✓ Saved':'✓ Nai-save';
+  setTimeout(function(){btn.textContent=lang==='en'?'Save':'I-save';},2500);
+}
+function schedNotif(time){
+  var parts=time.split(':'),h=parseInt(parts[0]),m=parseInt(parts[1]);
+  var now=new Date(),next=new Date();
+  next.setHours(h,m,0,0);if(next<=now)next.setDate(next.getDate()+1);
+  setTimeout(function(){
+    new Notification(lang==='en'?'Daily Devotion 🙏':'Araw-araw na Debosyon 🙏',{body:lang==='en'?'Time for your morning devotion.':'Oras na para sa iyong debosyon.'});
+    schedNotif(time);
+  },next-now);
+}
+
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});
+  document.querySelectorAll('.nbtn').forEach(function(b){b.classList.remove('active');});
+  document.getElementById('tab-'+name).classList.add('active');
+  document.getElementById('nav-'+name).classList.add('active');
+  if(name==='write')initWriteBooks();
+  if(name==='highlights')renderHighlightsTab();
+  if(name==='prayer')initPrayerTab();
+}
+
+// ============================================================
+// BIBLE BROWSER
+// ============================================================
+function initBooks(){
+  var sel=document.getElementById('bbook');
+  BOOKS.forEach(function(b){
+    var opt=document.createElement('option');
+    opt.value=b;
+    opt.textContent=b;
+    sel.appendChild(opt);
+  });
+}
+
+function setVer(v,btn){
+  bVer=v;
+  document.querySelectorAll('.vbtn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  // Repopulate books
+  var sel=document.getElementById('bbook');
+  var cur=sel.value;
+  while(sel.options.length>1)sel.remove(1);
+  BOOKS.forEach(function(b){
+    var opt=document.createElement('option');
+    opt.value=b;
+    opt.textContent=b;
+    sel.appendChild(opt);
+  });
+  sel.value=cur;
+  if(bBook&&bChap)loadChapter(bBook,bChap);
+}
+
+function onBook(){
+  bBook=document.getElementById('bbook').value;
+  bVerse=null;bVerseText='';
+  var cs=document.getElementById('bchap');
+  cs.innerHTML='<option value="">— Ch —</option>';
+  document.getElementById('bview').innerHTML='';
+  if(!bBook){cs.disabled=true;return;}
+  var n=CHAPS[bBook]||1;
+  for(var i=1;i<=n;i++){
+    var opt=document.createElement('option');
+    opt.value=i;opt.textContent=i;cs.appendChild(opt);
+  }
+  cs.disabled=false;
+  cs.value=1;bChap=1;
+  loadChapter(bBook,1);
+}
+
+function onChap(){
+  bChap=parseInt(document.getElementById('bchap').value)||0;
+  bVerse=null;bVerseText='';
+  if(bChap)loadChapter(bBook,bChap);
+}
+
+function cKey(book,chap,ver){return book.replace(/ /g,'_')+'_'+chap+'_'+ver;}
+
+function loadChapter(book,chap){
+  var wrap=document.getElementById('bview');
+  var key=cKey(book,chap,bVer);
+  if(bCache[key]){renderChap(book,chap,bCache[key],true);return;}
+
+  wrap.innerHTML='<div class="bible-msg"><span class="spin">✦</span> Loading…</div>';
+
+  // Fetch from bible-api.com (KJV, ASV, WEB, BBE all supported)
+  var fetchVer=bVer;
+  var slug=book.toLowerCase().replace(/ /g,'+');
+  fetch('https://bible-api.com/'+slug+'+'+chap+'?translation='+fetchVer)
+    .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
+    .then(function(data){
+      if(data.error||!data.verses||!data.verses.length)throw new Error('empty');
+      var verses=data.verses.map(function(v){return{n:v.verse,t:v.text.trim()};});
+      bCache[key]=verses;
+      try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
+      renderChap(book,chap,verses,false);
+    })
+    .catch(function(){
+      wrap.innerHTML='<div class="bible-msg">📡 '+(lang==='en'?'Could not load. Check internet connection.':'Hindi ma-load. Tingnan ang internet connection.')+'</div>';
+    });
+}
+
+function renderChap(book,chap,verses,cached){
+  var wrap=document.getElementById('bview');
+  var bname=book;
+  var vlabel=bVer==='kjv'?'King James Version':bVer==='asv'?'American Standard Version':bVer==='web'?'World English Bible':bVer==='bbe'?'Bible in Basic English':bVer.toUpperCase();
+  var html='<div class="chapter-box">'
+    +'<div class="chapter-head"><div class="chapter-head-title">'+bname+' '+chap+'</div>'
+    +'<div class="chapter-head-sub">'+vlabel+(cached?'<span class="cached-dot"></span>':'')+'</div></div>'
+    +'<div class="hl-toolbar">'
+    +'<span class="hl-label">Highlight:</span>'
+    +'<div class="hl-btn yellow" onclick="setHL(&quot;hl1&quot;)" title="Yellow"></div>'
+    +'<div class="hl-btn green" onclick="setHL(&quot;hl2&quot;)" title="Green"></div>'
+    +'<div class="hl-btn red" onclick="setHL(&quot;hl3&quot;)" title="Pink"></div>'
+    +'<div class="hl-btn blue" onclick="setHL(&quot;hl4&quot;)" title="Blue"></div>'
+    +'<div class="hl-btn clear" onclick="setHL(&quot;clear&quot;)">✕ Clear</div>'
+    +'</div>'
+    +'<div class="vlist">';
+  verses.forEach(function(v){
+    var safe=v.t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html+='<div class="vrow" id="vr'+v.n+'" onclick="pickVerse('+v.n+',this)">'
+      +'<span class="vnum">'+v.n+'</span><span class="vword">'+safe+'</span></div>';
+  });
+  html+='</div><button class="use-btn" id="use-btn" onclick="useVerse()">'+
+    (lang==='en'?'✦ Use This Verse':'✦ Gamitin ang Talatang Ito')+'</button></div>';
+  wrap.innerHTML=html;
+  if(bVerse){
+    var r=document.getElementById('vr'+bVerse);
+    if(r){r.classList.add('sel');document.getElementById('use-btn').classList.add('show');}
+  }
+  restoreHL();
+}
+
+function pickVerse(n,el){
+  bVerse=n;
+  bVerseText=el.querySelector('.vword').textContent;
+  // Apply highlight with current color
+  applyHL(n,el);
+  // Mark selected
+  document.querySelectorAll('.vrow').forEach(function(r){r.classList.remove('sel');});
+  if(curHL==='clear'){
+    // just deselect, no permanent sel
+  } else {
+    el.classList.add('sel');
+  }
+  var btn=document.getElementById('use-btn');
+  if(btn){
+    var bname=bVer==='tagalog'?(TGL_BOOKS[bBook]||bBook):bBook;
+    btn.textContent=(lang==='en'?'✦ Use ':'✦ Gamitin: ')+bname+' '+bChap+':'+n;
+    btn.classList.add('show');
+  }
+  renderHighlightsTab();
+}
+
+function useVerse(){
+  if(!bVerse)return;
+  var bname=bVer==='tagalog'?(TGL_BOOKS[bBook]||bBook):bBook;
+  var ref=bname+' '+bChap+':'+bVerse;
+  // Fill both the textarea and the pretty picker box
+  document.getElementById('jv').value=bVerseText;
+  document.getElementById('jr').value=ref;
+  // Show picked verse box
+  document.getElementById('picked-text').textContent='"'+bVerseText+'"';
+  document.getElementById('picked-ref').textContent=ref;
+  document.getElementById('picked-box').classList.add('show');
+  document.getElementById('verse-pick-btn').style.display='none';
+  switchTab('write');
+  syncBar(lang==='en'?'✦ Verse added':'✦ Naidagdag ang talata');
+}
+
+function openBiblePicker(){
+  switchTab('bible');
+}
+
+// Highlight storage: {bookChapVer_n: 'hl1'|'hl2'...}
+var hlData={};
+try{hlData=JSON.parse(localStorage.getItem(lsKey('hl'))||'{}');}catch(e){}
+var curHL='hl1';
+
+function setHL(color){
+  curHL=color;
+  // Update active button
+  document.querySelectorAll('.hl-btn').forEach(function(b){b.classList.remove('active');});
+  if(color!=='clear'){
+    var btnMap={hl1:'.yellow',hl2:'.green',hl3:'.red',hl4:'.blue'};
+    var btn=document.querySelector('.hl-btn'+btnMap[color]);
+    if(btn)btn.classList.add('active');
+  }
+}
+
+function applyHL(n,el){
+  if(!bBook||!bChap)return;
+  var key=bBook.replace(/ /g,'_')+'_'+bChap+'_'+n;
+  var row=el||document.getElementById('vr'+n);
+  if(!row)return;
+  // Remove existing hl classes
+  row.classList.remove('hl1','hl2','hl3','hl4');
+  if(curHL==='clear'){
+    delete hlData[key];
+  } else {
+    hlData[key]=curHL;
+    row.classList.add(curHL);
+  }
+  try{localStorage.setItem(lsKey('hl'),JSON.stringify(hlData));}catch(e){}
+}
+
+function restoreHL(){
+  if(!bBook||!bChap)return;
+  var prefix=bBook.replace(/ /g,'_')+'_'+bChap+'_';
+  Object.keys(hlData).forEach(function(k){
+    if(k.indexOf(prefix)===0){
+      var n=k.replace(prefix,'');
+      var row=document.getElementById('vr'+n);
+      if(row){row.classList.remove('hl1','hl2','hl3','hl4');row.classList.add(hlData[k]);}
+    }
+  });
+}
+
+
+function renderHighlightsTab(){
+  var el=document.getElementById('hllist');
+  if(!el)return;
+  var keys=Object.keys(hlData);
+  if(!keys.length){
+    el.innerHTML='<div class="empty-state">'+(lang==='en'?'No highlights yet. Tap a verse color in Bible tab to highlight! ✦':'Wala pang highlights. I-tap ang kulay sa Bible tab para mag-highlight! ✦')+'</div>';
+    return;
+  }
+  // Group by book_chap
+  var grouped={};
+  keys.forEach(function(k){
+    var parts=k.split('_');
+    // key format: Book_Name_chap_versenum  — last is verse, second to last is chap, rest is book
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var gkey=bk+'_'+ch;
+    if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
+    grouped[gkey].verses.push({n:vn,color:hlData[k],key:k});
+  });
+  var html='';
+  Object.keys(grouped).sort().forEach(function(gk){
+    var g=grouped[gk];
+    html+='<div class="hl-tab-card">'
+      +'<div class="hl-tab-ref">'+g.book+' '+g.chap+'</div>';
+    g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
+      var dotClass='hl-dot-'+v.color;
+      // Try to get verse text from cache
+      var cacheKey=g.book.replace(/ /g,'_')+'_'+g.chap+'_kjv';
+      var vtext='';
+      if(bCache[cacheKey]){
+        var found=bCache[cacheKey].find(function(x){return x.n===parseInt(v.n)||String(x.n)===String(v.n);});
+        if(found)vtext=found.t;
+      }
+      html+='<div class="hl-tab-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--linen);">'
+        +'<span class="hl-tab-dot '+dotClass+'"></span>'
+        +'<div class="hl-tab-body">'
+        +'<div style="font-family:\'Jost\',sans-serif;font-size:9px;color:var(--stone);letter-spacing:1px;margin-bottom:3px;">v'+v.n+'</div>'
+        +(vtext?'<div class="hl-tab-text">'+vtext+'</div>':'<div class="hl-tab-text" style="color:var(--stone);font-style:italic;">(open chapter to load text)</div>')
+        +'</div>'
+        +'<button class="hl-tab-del" onclick="removeHL(\''+v.key+'\')">✕</button>'
+        +'</div>';
+    });
+    html+='</div>';
+  });
+  el.innerHTML=html;
+}
+
+function removeHL(key){
+  delete hlData[key];
+  try{localStorage.setItem(lsKey('hl'),JSON.stringify(hlData));}catch(e){}
+  var parts=key.split('_');
+  var vn=parts[parts.length-1];
+  var row=document.getElementById('vr'+vn);
+  if(row)row.classList.remove('hl1','hl2','hl3','hl4');
+  renderHighlightsTab();
+}
+
+// ============================================================
+// HIGHLIGHT PICKER (for Write tab)
+// ============================================================
+function openHighlightPicker(){
+  var overlay=document.getElementById('hl-picker-overlay');
+  var list=document.getElementById('hl-picker-list');
+  var keys=Object.keys(hlData);
+  if(!keys.length){
+    alert('Wala pang highlights. Mag-highlight muna sa Bible tab! 🌟');
+    return;
+  }
+  // Build grouped list with checkboxes
+  var grouped={};
+  keys.forEach(function(k){
+    var parts=k.split('_');
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var gkey=bk+'__'+ch;
+    if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
+    var cacheKey=bk.replace(/ /g,'_')+'_'+ch+'_kjv';
+    var vtext='';
+    if(bCache[cacheKey]){
+      var found=bCache[cacheKey].find(function(x){return String(x.n)===String(vn);});
+      if(found)vtext=found.t;
+    }
+    grouped[gkey].verses.push({n:vn,color:hlData[k],key:k,text:vtext});
+  });
+  var html='';
+  Object.keys(grouped).sort().forEach(function(gk){
+    var g=grouped[gk];
+    var dotColors={hl1:'#F5C842',hl2:'#6DBF82',hl3:'#E8A0A0',hl4:'#85AECF'};
+    html+='<div style="margin-bottom:16px;">'
+      +'<div style="font-family:\'Jost\',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--sage);text-transform:uppercase;margin-bottom:8px;">'+g.book+' '+g.chap+'</div>';
+    g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
+      var dot='<span style="display:inline-block;width:9px;height:9px;border-radius:50%;background:'+(dotColors[v.color]||'#ccc')+';margin-right:8px;flex-shrink:0;vertical-align:middle;"></span>';
+      var preview=v.text?v.text.substring(0,80)+'…':'(buksan ang kabanata para ma-load ang teksto)';
+      html+='<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:10px;margin-bottom:6px;cursor:pointer;">'
+        +'<input type="checkbox" class="hl-pick-cb" data-key="'+v.key+'" data-book="'+g.book+'" data-chap="'+g.chap+'" data-verse="'+v.n+'" data-text="'+encodeURIComponent(v.text)+'" style="margin-top:4px;accent-color:var(--sage);flex-shrink:0;">'
+        +'<div>'+dot
+        +'<span style="font-family:\'Jost\',sans-serif;font-size:9px;color:var(--stone);">v'+v.n+'</span><br>'
+        +'<span style="font-family:\'EB Garamond\',serif;font-size:15px;font-style:italic;color:var(--ink);">'+preview+'</span>'
+        +'</div></label>';
+    });
+    html+='</div>';
+  });
+  list.innerHTML=html;
+  overlay.style.display='flex';
+}
+
+function closeHLPicker(){
+  document.getElementById('hl-picker-overlay').style.display='none';
+}
+
+function addSelectedHighlights(){
+  var checked=document.querySelectorAll('.hl-pick-cb:checked');
+  if(!checked.length){alert('Walang napiling verse.');return;}
+  // Each checked verse = its own row (no grouping into ranges)
+  checked.forEach(function(cb){
+    verseRowCounter++;
+    var id='vrow'+verseRowCounter;
+    var book=cb.dataset.book;
+    var chap=parseInt(cb.dataset.chap);
+    var vn=parseInt(cb.dataset.verse);
+    var txt=decodeURIComponent(cb.dataset.text||'');
+    verseRows.push({id:id, book:book, chap:chap, verse:vn, text:txt});
+  });
+  renderVerseRows();
+  updateCombinedDisplay();
+  closeHLPicker();
+}
+
+
+var aiTranslating = false;
+var aiTranslatedCache = {};
+
+function translateChapter(){
+  if(!bBook||!bChap){alert('Please select a book and chapter first.');return;}
+  if(aiTranslating)return;
+  var key=cKey(bBook,bChap,'kjv');
+  var verses=bCache[key];
+  if(!verses||!verses.length){alert('Please load the chapter first (select KJV).');return;}
+
+  // Check if already translated
+  var tkey='tl_'+cKey(bBook,bChap,'kjv');
+  if(aiTranslatedCache[tkey]){
+    renderChapTranslated(bBook,bChap,aiTranslatedCache[tkey]);
+    return;
+  }
+
+  aiTranslating=true;
+  var btn=document.getElementById('vbtn-tl');
+  btn.classList.add('loading');
+  btn.textContent='⏳ Translating…';
+
+    var verseList=verses.map(function(v){return v.n+'. '+v.t;}).join(' | ');
+  var prompt='Translate these Bible verses ('+bBook+' chapter '+bChap+', KJV) to natural Filipino (Tagalog). Reverent poetic tone. Reply ONLY with JSON array, no markdown. Format: [{"n":1,"t":"translated text"},{"n":2,"t":"..."}]. Verses: '+verseList;
+
+  fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
+    body:JSON.stringify({
+      model:'google/gemma-3-12b-it:free',
+      max_tokens:4000,
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    if(data.error){
+      alert('API Error: '+data.error.type+' — '+data.error.message);
+      btn.classList.remove('loading');btn.textContent='🌐 Filipino';aiTranslating=false;return;
+    }
+    var text=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||(data.content&&data.content[0]&&data.content[0].text)||'';
+    // strip any markdown fences
+    text=text.replace(/```json|```/g,'').trim();
+    var translated=JSON.parse(text);
+    aiTranslatedCache[tkey]=translated;
+    renderChapTranslated(bBook,bChap,translated);
+    btn.classList.remove('loading');
+    btn.textContent='🌐 Filipino';
+    aiTranslating=false;
+  })
+  .catch(function(err){
+    console.error(err);
+    btn.classList.remove('loading');
+    btn.textContent='🌐 Filipino';
+    aiTranslating=false;
+    alert('Translation failed: '+err.message);
+  });
+}
+
+function renderChapTranslated(book,chap,verses){
+  var wrap=document.getElementById('bview');
+  var html='<div class="chapter-box">'
+    +'<div class="chapter-head"><div class="chapter-head-title">'+book+' '+chap+'</div>'
+    +'<div class="chapter-head-sub">Filipino <span class="ai-tl-badge">AI</span></div></div>'
+    +'<div class="vlist">';
+  verses.forEach(function(v){
+    var safe=(v.t||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    html+='<div class="vrow" id="vr'+v.n+'" onclick="pickVerse('+v.n+',this)">'
+      +'<span class="vnum">'+v.n+'</span><span class="vword">'+safe+'</span></div>';
+  });
+  html+='</div><button class="use-btn" id="use-btn" onclick="useVerse()">✦ Gamitin ang Talatang Ito</button></div>';
+  wrap.innerHTML=html;
+}
+
+// ============================================================
+// AI PRAYER GENERATOR
+// ============================================================
+var generatingPrayer=false;
+
+function generatePrayer(){
+  if(generatingPrayer)return;
+  generatingPrayer=true;
+
+  var theme=document.getElementById('prayer-theme-input').value.trim();
+  var box=document.getElementById('ai-prayer-box');
+  var loading=document.getElementById('ai-prayer-loading');
+  var textEl=document.getElementById('ai-prayer-text');
+
+  box.style.display='none';
+  loading.style.display='block';
+
+  // Get today's verse for context
+  var today=new Date();
+  var idx=today.getDate()%VERSES.length;
+  var todayVerse=VERSES[idx];
+
+  var prompt;
+  if(theme){
+    prompt='Write a sincere, heartfelt Christian prayer in Filipino (Tagalog) about: "'+theme+'". '
+      +'The prayer should be personal, warm, and about 3-4 short paragraphs. '
+      +'It may reference this verse for inspiration: '+todayVerse.r+' — "'+todayVerse.t+'". '
+      +'Write the prayer directly without any introduction or explanation.';
+  } else {
+    var dayName=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
+    var month=['January','February','March','April','May','June','July','August','September','October','November','December'][today.getMonth()];
+    prompt='Write a sincere morning prayer in Filipino (Tagalog) for '+dayName+', '+month+' '+today.getDate()+'. '
+      +'Base the theme on this Bible verse: '+todayVerse.r+' — "'+todayVerse.t+'". '
+      +'The prayer should be heartfelt, personal, 3-4 short paragraphs. '
+      +'Write the prayer directly, no introduction.';
+  }
+
+  fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
+    body:JSON.stringify({
+      model:'google/gemma-3-12b-it:free',
+      max_tokens:800,
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){
+    console.log('OpenRouter status:',r.status,r.statusText);
+    return r.json();
+  })
+  .then(function(data){
+    console.log('OpenRouter response:',JSON.stringify(data));
+    loading.style.display='none';
+    generatingPrayer=false;
+    if(data.error){
+      textEl.textContent='⚠️ Error: '+( data.error.message||JSON.stringify(data.error));
+      box.style.display='block';
+      return;
+    }
+    var text=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+    if(!text){
+      textEl.textContent='⚠️ Walang naibalik na prayer. Response: '+JSON.stringify(data).substring(0,200);
+      box.style.display='block';
+      return;
+    }
+    textEl.textContent=text;
+    box.style.display='block';
+  })
+  .catch(function(err){
+    console.error('Prayer fetch error:',err);
+    loading.style.display='none';
+    generatingPrayer=false;
+    textEl.textContent='⚠️ Network error: '+err.message;
+    box.style.display='block';
+  });
+}
+
+function copyPrayer(){
+  var text=document.getElementById('ai-prayer-text').textContent;
+  navigator.clipboard.writeText(text).then(function(){
+    var btn=document.querySelector('.ai-prayer-copy');
+    btn.textContent='Copied!';
+    setTimeout(function(){btn.textContent='Copy';},2000);
+  }).catch(function(){
+    // fallback
+    var ta=document.createElement('textarea');
+    ta.value=text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand('copy');
+    document.body.removeChild(ta);
+  });
+}
+
+// ============================================================
+// INIT
+// ============================================================
+var sr=localStorage.getItem(lsKey('dr'));
+if(sr)document.getElementById('remtime').value=sr;
+initBooks();
+initWriteBooks();
+renderAll();
+renderHighlightsTab();
+
+// Safety net - re-render after DOM fully settled
+setTimeout(function(){
+  try { renderAll(); } catch(e){}
+}, 150);
+
+// PWA INSTALL
+var deferredInstallPrompt = null;
+window.addEventListener('beforeinstallprompt', function(e){
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  // Show banner after user is logged in
+  setTimeout(function(){
+    if(currentUser && !localStorage.getItem('pwa_dismissed')){
+      document.getElementById('install-banner').classList.add('show');
+    }
+  }, 3000);
+});
+
+function doInstall(){
+  if(!deferredInstallPrompt) return;
+  deferredInstallPrompt.prompt();
+  deferredInstallPrompt.userChoice.then(function(){
+    deferredInstallPrompt=null;
+    document.getElementById('install-banner').classList.remove('show');
+  });
+}
+
+function dismissInstall(){
+  document.getElementById('install-banner').classList.remove('show');
+  localStorage.setItem('pwa_dismissed','1');
+}
+
+// Service Worker
+if('serviceWorker' in navigator){
+  window.addEventListener('load',function(){
+    navigator.serviceWorker.register('sw.js')
+      .then(function(r){console.log('SW:',r.scope);})
+      .catch(function(e){console.log('SW err:',e);});
+  });
+}
+</script>
+</body>
+</html>
