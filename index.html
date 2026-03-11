@@ -397,7 +397,7 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
             <button class="tb-btn" onmousedown="fmt(event,'insertUnorderedList')">• List</button>
             <button class="tb-btn" onmousedown="fmt(event,'insertOrderedList')">1. List</button>
           </div>
-          <div class="editor" id="jp" contenteditable="true"></div>
+          <div class="editor" id="jp" contenteditable="true" style="min-height:160px;"></div>
         </div>
       </div>
       <button class="btn btn-sage" onclick="saveEntry()" id="sbtn">Save Devotion</button>
@@ -862,12 +862,14 @@ function renderVerseRows(){
 }
 
 function updateCombinedDisplay(){
-  var refParts=[], allText='';
+  var refParts=[], allText='', allHtml='';
   verseRows.forEach(function(row){
     if(!row.book||!row.chap||!row.verse) return;
     refParts.push(row.book+' '+row.chap+':'+row.verse);
     if(allText) allText+=' ';
     allText+=row.text||'';
+    if(allHtml) allHtml+=' ';
+    allHtml+='<sup style="font-size:10px;color:#7A9E8A;font-family:sans-serif;">'+row.verse+'</sup> '+(row.text||'');
   });
   var rd=document.getElementById('jref-display');
   if(rd){
@@ -875,6 +877,7 @@ function updateCombinedDisplay(){
     else{rd.textContent='';rd.classList.remove('has-ref');}
   }
   window._combinedVerseText=allText;
+  window._combinedVerseHtml=allHtml;
   window._combinedVerseRef=refParts.join(' • ');
 }
 
@@ -911,11 +914,12 @@ function renderVerse(){
   var v=VERSES[d%VERSES.length];
   document.getElementById('vt').textContent='"'+(lang==='en'?v.en:v.tl)+'"';
   document.getElementById('vr').textContent=v.ref;
-  document.getElementById('rt2').textContent=lang==='en'?v.re:v.rt;
   var btn=document.getElementById('rbtn');
   var ra=document.getElementById('refl-area');
   if(showRefl){ra.classList.add('show');btn.style.display='none';}
   else{ra.classList.remove('show');btn.textContent=lang==='en'?'Read & Reflect':'Basahin at Pagnilayan';btn.style.display='block';}
+  // Generate AI content for today
+  generateDailyAI(lang==='en'?v.en:v.tl, v.ref);
 }
 
 function renderStreak(){
@@ -974,7 +978,7 @@ function renderTexts(){
   s('rbtn',showRefl?'':(e?'Read & Reflect':'Basahin at Pagnilayan'));
   s('stl',e?'Streak':'Sunod-sunod');
   s('qpl',e?'Morning Prayer':'Pananalangin sa Umaga');
-  s('qpt',e?'Lord, thank You for this new day. Guide my steps, guard my heart, and let Your will be done in my life today. Amen.':'Panginoon, salamat sa bagong araw na ito. Gabayan Mo ang aking mga hakbang, pangalagaan ang aking puso, at nawa ang Iyong kalooban ang mangyari sa aking buhay ngayon. Amen.');
+  // prayer text is AI-generated, don't overwrite
   s('wtl',e?'Write Your Devotion':'Isulat ang Iyong Debosyon');
   s('wv',e?'Bible Verse':'Talatang Bibliya');
   s('wd',e?'My Reflection':'Aking Pagninilay');
@@ -1042,7 +1046,7 @@ function saveEntry(){
   var entry={
     id:Date.now(),date:now.toDateString(),
     dlabel:now.toLocaleDateString(lang==='en'?'en-US':'fil-PH',{weekday:'short',year:'numeric',month:'short',day:'numeric'}),
-    verse:v,ref:ref,reflection:rhtml,prayer:phtml
+    verse:v,verseHtml:window._combinedVerseHtml||'',ref:ref,reflection:rhtml,prayer:phtml
   };
   if(db&&currentUser){
     userCol('entries').doc(String(entry.id)).set(entry).then(function(){syncBar(lang==='en'?'✓ Saved':'✓ Nai-save');});
@@ -1079,7 +1083,7 @@ function openEntry(id){
   if(!e)return;
   currentModalEntry=e;
   document.getElementById('mdate').textContent=e.dlabel||e.date;
-  document.getElementById('mv').textContent=e.verse?'"'+e.verse+'"':'—';
+  document.getElementById('mv').innerHTML=e.verseHtml ? '"'+e.verseHtml+'"' : (e.verse?'"'+e.verse+'"':'—');
   document.getElementById('mr').textContent=e.ref||'';
   document.getElementById('md').innerHTML=e.reflection||'—';
   document.getElementById('mp').innerHTML=e.prayer||'—';
@@ -1696,6 +1700,88 @@ function renderChapTranslated(book,chap,verses){
 }
 
 // ============================================================
+// ============================================================
+// DAILY AI — Reflection + Morning Prayer (auto-generated)
+// ============================================================
+var generatingDaily = false;
+
+function generateDailyAI(verseText, verseRef){
+  if(generatingDaily) return;
+
+  // Cache key — regenerate once per day per lang
+  var cacheKey = lsKey('daily_ai_'+new Date().toDateString()+'_'+lang);
+  var cached = null;
+  try { cached = JSON.parse(localStorage.getItem(cacheKey)||'null'); } catch(e){}
+  if(cached){
+    document.getElementById('rt2').textContent = cached.reflection;
+    document.getElementById('qpt').textContent = cached.prayer;
+    return;
+  }
+
+  // Show loading state
+  document.getElementById('rt2').textContent = lang==='en'?'✦ Generating reflection…':'✦ Ginagawa ang pagninilay…';
+  document.getElementById('qpt').textContent = lang==='en'?'✦ Generating prayer…':'✦ Ginagawa ang panalangin…';
+
+  generatingDaily = true;
+  var today = new Date();
+  var dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
+
+  var prompt = lang==='en'
+    ? 'Based on this Bible verse: "'+verseText+'" ('+verseRef+'), write two things:\n\n'
+      +'1. REFLECTION: A short, personal, warm devotional reflection (3-4 sentences). Start directly, no label.\n\n'
+      +'2. PRAYER: A sincere morning prayer for '+dayName+' based on this verse (3-4 sentences). Start with "Lord," or "Father,". No label.\n\n'
+      +'Separate them with exactly this line: ---PRAYER---\n'
+      +'Write naturally, like a personal devotion. No markdown, no extra labels.'
+    : 'Batay sa talatang ito mula sa Bibliya: "'+verseText+'" ('+verseRef+'), sumulat ng dalawa:\n\n'
+      +'1. PAGNINILAY: Maikling personal na pagninilay (3-4 pangungusap). Magsimula agad, walang label.\n\n'
+      +'2. PANALANGIN: Taimtim na panalangin sa umaga para sa '+dayName+' batay sa talatang ito (3-4 pangungusap). Magsimula sa "Panginoon," o "Ama,". Walang label.\n\n'
+      +'Paghiwalayin ng: ---PRAYER---\n'
+      +'Sumulat nang natural, tulad ng personal na debosyon. Walang markdown.';
+
+  fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{
+      'Content-Type':'application/json',
+      'Authorization':'Bearer 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',
+      'HTTP-Referer':'https://devotion-theta.vercel.app'
+    },
+    body:JSON.stringify({
+      model:'google/gemma-3-12b-it:free',
+      max_tokens:600,
+      messages:[{role:'user',content:prompt}]
+    })
+  })
+  .then(function(r){return r.json();})
+  .then(function(data){
+    generatingDaily=false;
+    var text=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
+    if(!text){
+      document.getElementById('rt2').textContent=lang==='en'?'A moment with God each morning transforms your entire day.':'Ang sandali kasama ang Diyos tuwing umaga ay nagbabago ng buong araw mo.';
+      document.getElementById('qpt').textContent=lang==='en'?'Lord, thank You for this new day. Guide my steps and guard my heart. Amen.':'Panginoon, salamat sa bagong araw. Gabayan Mo ang aking mga hakbang. Amen.';
+      return;
+    }
+    var parts = text.split('---PRAYER---');
+    var reflection = (parts[0]||'').trim();
+    var prayer = (parts[1]||'').trim();
+    if(!prayer) {
+      // fallback split — half and half
+      var mid = Math.floor(text.length/2);
+      var split = text.indexOf('\n\n', mid);
+      reflection = text.substring(0, split>0?split:mid).trim();
+      prayer = text.substring(split>0?split:mid).trim();
+    }
+    document.getElementById('rt2').textContent = reflection;
+    document.getElementById('qpt').textContent = prayer;
+    // Cache for today
+    try { localStorage.setItem(cacheKey, JSON.stringify({reflection:reflection, prayer:prayer})); } catch(e){}
+  })
+  .catch(function(){
+    generatingDaily=false;
+    document.getElementById('rt2').textContent=lang==='en'?'A moment with God each morning transforms your entire day.':'Ang sandali kasama ang Diyos tuwing umaga ay nagbabago ng buong araw mo.';
+    document.getElementById('qpt').textContent=lang==='en'?'Lord, thank You for this new day. Guide my steps and guard my heart. Amen.':'Panginoon, salamat sa bagong araw. Gabayan Mo ang aking mga hakbang. Amen.';
+  });
+}
+
 // AI PRAYER GENERATOR
 // ============================================================
 var generatingPrayer=false;
