@@ -735,6 +735,10 @@ function loadUserData(){
   streak = parseInt(localStorage.getItem(lsKey('ds'))||'1');
   checkedToday = localStorage.getItem(lsKey('dd'))===new Date().toDateString();
 
+  // Load reminder time
+  var sr = localStorage.getItem(lsKey('dr'));
+  if(sr){ var rt=document.getElementById('remtime'); if(rt) rt.value=sr; }
+
   // Entries
   var u1=userCol('entries').onSnapshot(function(snap){
     entries=[];
