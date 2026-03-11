@@ -1255,7 +1255,15 @@ function saveReminder(){
   var t=document.getElementById('remtime').value;
   localStorage.setItem(lsKey('dr'),t);
   if('Notification' in window){
-    Notification.requestPermission().then(function(p){if(p==='granted')schedNotif(t);});
+    Notification.requestPermission().then(function(p){
+      if(p==='granted'){
+        schedNotif(t);
+        // Also tell service worker to schedule
+        if(navigator.serviceWorker && navigator.serviceWorker.controller){
+          navigator.serviceWorker.controller.postMessage({type:'SCHEDULE_ALARM',time:t});
+        }
+      }
+    });
   }
   var btn=document.getElementById('rembtn');
   btn.textContent=lang==='en'?'✓ Saved':'✓ Nai-save';
@@ -1266,7 +1274,7 @@ function schedNotif(time){
   var now=new Date(),next=new Date();
   next.setHours(h,m,0,0);if(next<=now)next.setDate(next.getDate()+1);
   setTimeout(function(){
-    new Notification(lang==='en'?'Daily Devotion 🙏':'Araw-araw na Debosyon 🙏',{body:lang==='en'?'Time for your morning devotion.':'Oras na para sa iyong debosyon.'});
+    new Notification(lang==='en'?'Daily Devotion 🙏':'Araw-araw na Debosyon 🙏',{body:lang==='en'?'Time for your morning devotion.':'Oras na para sa iyong debosyon.',icon:'./icon-192.png'});
     schedNotif(time);
   },next-now);
 }
