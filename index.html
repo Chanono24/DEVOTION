@@ -1675,7 +1675,7 @@ function translateChapter(){
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
     body:JSON.stringify({
-      model:'google/gemma-3-12b-it:free',
+      model:'mistralai/mistral-small-3.1-24b-instruct:free',
       max_tokens:4000,
       messages:[{role:'user',content:prompt}]
     })
@@ -1730,7 +1730,7 @@ function generateDailyAI(verseText, verseRef){
   if(generatingDaily) return;
 
   // Cache key — regenerate once per day per lang
-  var cacheKey = lsKey('daily_ai_'+new Date().toDateString()+'_'+lang);
+  var cacheKey = lsKey('daily_ai_v2_'+new Date().toDateString()+'_'+lang);
   var cached = null;
   try { cached = JSON.parse(localStorage.getItem(cacheKey)||'null'); } catch(e){}
   if(cached){
@@ -1748,16 +1748,18 @@ function generateDailyAI(verseText, verseRef){
   var dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
 
   var prompt = lang==='en'
-    ? 'Based on this Bible verse: "'+verseText+'" ('+verseRef+'), write two things:\n\n'
-      +'1. REFLECTION: A short, personal, warm devotional reflection (3-4 sentences). Start directly, no label.\n\n'
-      +'2. PRAYER: A sincere morning prayer for '+dayName+' based on this verse (3-4 sentences). Start with "Lord," or "Father,". No label.\n\n'
-      +'Separate them with exactly this line: ---PRAYER---\n'
-      +'Write naturally, like a personal devotion. No markdown, no extra labels.'
-    : 'Batay sa talatang ito mula sa Bibliya: "'+verseText+'" ('+verseRef+'), sumulat ng dalawa:\n\n'
-      +'1. PAGNINILAY: Maikling personal na pagninilay (3-4 pangungusap). Magsimula agad, walang label.\n\n'
-      +'2. PANALANGIN: Taimtim na panalangin sa umaga para sa '+dayName+' batay sa talatang ito (3-4 pangungusap). Magsimula sa "Panginoon," o "Ama,". Walang label.\n\n'
-      +'Paghiwalayin ng: ---PRAYER---\n'
-      +'Sumulat nang natural, tulad ng personal na debosyon. Walang markdown.';
+    ? 'You are writing a Christian daily devotional. Today\'s Bible verse is:\n\n"'+verseText+'" — '+verseRef+'\n\n'
+      +'Write TWO things directly, separated by ---PRAYER--- on its own line:\n\n'
+      +'First, a REFLECTION: 3-4 sentences that deeply explain what this specific verse means, what God is saying through it, and one practical way to live it out today. Be specific to this verse, not generic.\n\n'
+      +'---PRAYER---\n\n'
+      +'Then, a MORNING PRAYER: 3-4 sentences addressed to God, referencing the specific message of this verse. Start with "Lord," or "Father,". Make it personal and heartfelt.\n\n'
+      +'No labels, no markdown, no introduction. Just the reflection text, then ---PRAYER---, then the prayer text.'
+    : 'Ikaw ay nagsusulat ng Christian na pang-araw-araw na debosyon. Ang talata ngayon ay:\n\n"'+verseText+'" — '+verseRef+'\n\n'
+      +'Sumulat ng DALAWA, paghiwalayin ng ---PRAYER--- sa sariling linya:\n\n'
+      +'Una, PAGNINILAY: 3-4 pangungusap na nagpapaliwanag nang malalim kung ano ang ibig sabihin ng talatang ito, ano ang sinasabi ng Diyos dito, at isang praktikal na paraan para maisabuhay ito ngayon. Maging tiyak sa talatang ito.\n\n'
+      +'---PRAYER---\n\n'
+      +'Pagkatapos, PANALANGIN SA UMAGA: 3-4 pangungusap na nakatuon sa Diyos, binabanggit ang mensahe ng talatang ito. Magsimula sa "Panginoon," o "Ama,". Personal at taimtim.\n\n'
+      +'Walang label, walang markdown, walang panimula. Ang pagninilay lang, tapos ---PRAYER---, tapos ang panalangin.';
 
   fetch('https://openrouter.ai/api/v1/chat/completions',{
     method:'POST',
@@ -1767,7 +1769,7 @@ function generateDailyAI(verseText, verseRef){
       'HTTP-Referer':'https://devotion-theta.vercel.app'
     },
     body:JSON.stringify({
-      model:'google/gemma-3-12b-it:free',
+      model:'mistralai/mistral-small-3.1-24b-instruct:free',
       max_tokens:600,
       messages:[{role:'user',content:prompt}]
     })
@@ -1843,7 +1845,7 @@ function generatePrayer(){
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
     body:JSON.stringify({
-      model:'google/gemma-3-12b-it:free',
+      model:'mistralai/mistral-small-3.1-24b-instruct:free',
       max_tokens:800,
       messages:[{role:'user',content:prompt}]
     })
