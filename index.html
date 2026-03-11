@@ -1043,10 +1043,14 @@ function saveEntry(){
     alert(lang==='en'?'Please write something first.':'Mangyaring sumulat muna.');return;
   }
   var now=new Date();
+  // Save each verse as individual item for numbered display
+  var versesArr=verseRows.filter(function(r){return r.book&&r.verse;}).map(function(r){
+    return {ref:r.book+' '+r.chap+':'+r.verse, n:r.verse, text:r.text||''};
+  });
   var entry={
     id:Date.now(),date:now.toDateString(),
     dlabel:now.toLocaleDateString(lang==='en'?'en-US':'fil-PH',{weekday:'short',year:'numeric',month:'short',day:'numeric'}),
-    verse:v,verseHtml:window._combinedVerseHtml||'',ref:ref,reflection:rhtml,prayer:phtml
+    verse:v,verseHtml:window._combinedVerseHtml||'',verses:versesArr,ref:ref,reflection:rhtml,prayer:phtml
   };
   if(db&&currentUser){
     userCol('entries').doc(String(entry.id)).set(entry).then(function(){syncBar(lang==='en'?'✓ Saved':'✓ Nai-save');});
@@ -1083,7 +1087,24 @@ function openEntry(id){
   if(!e)return;
   currentModalEntry=e;
   document.getElementById('mdate').textContent=e.dlabel||e.date;
-  document.getElementById('mv').innerHTML=e.verseHtml ? '"'+e.verseHtml+'"' : (e.verse?'"'+e.verse+'"':'—');
+
+  // Build verse display — per verse with ref label + number
+  var verseHtml='';
+  if(e.verses&&e.verses.length){
+    e.verses.forEach(function(v){
+      verseHtml+='<div style="margin-bottom:10px;">'
+        +'<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:3px;">'+v.ref+'</div>'
+        +'<span style="font-size:11px;color:var(--sage);font-family:sans-serif;vertical-align:super;">'+v.n+'</span> '+v.text
+        +'</div>';
+    });
+  } else if(e.verseHtml){
+    verseHtml=e.verseHtml;
+  } else if(e.verse){
+    verseHtml=e.verse;
+  } else {
+    verseHtml='—';
+  }
+  document.getElementById('mv').innerHTML=verseHtml;
   document.getElementById('mr').textContent=e.ref||'';
   document.getElementById('md').innerHTML=e.reflection||'—';
   document.getElementById('mp').innerHTML=e.prayer||'—';
