@@ -203,7 +203,53 @@ body{font-family:'Jost',sans-serif;color:var(--ink);}
 .hl-btn.blue{background:#70A8FF;}
 .hl-btn.clear{background:var(--linen);font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--stone);width:auto;padding:0 8px;border-radius:10px;font-family:'Jost',sans-serif;}
 .hl-label{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-right:4px;}
-/* VERSE PICKER in Write */
+/* READING PLAN */
+.plan-card{background:#fff;border:1.5px solid var(--linen);border-radius:16px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.plan-card:active{transform:scale(.98);}
+.plan-card.selected{border-color:var(--sage);background:var(--sage-xl);}
+.plan-name{font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);margin-bottom:4px;}
+.plan-desc{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.5px;color:var(--stone);margin-bottom:8px;}
+.plan-meta{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1.5px;text-transform:uppercase;color:var(--sage);}
+.plan-header-card{background:var(--sage);border-radius:16px;padding:18px;color:#fff;}
+.plan-header-name{font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;}
+.plan-header-sub{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;opacity:.8;}
+.plan-reading-item{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:12px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;}
+.plan-reading-item:active{background:var(--sage-xl);}
+.plan-reading-ref{font-family:'EB Garamond',serif;font-size:17px;color:var(--ink);flex:1;}
+.plan-reading-arrow{color:var(--sage);font-size:18px;}
+.plan-progress-bar{background:var(--linen);border-radius:8px;height:10px;margin-bottom:6px;overflow:hidden;}
+.plan-progress-fill{height:10px;background:var(--sage);border-radius:8px;transition:width .5s;}
+.plan-progress-label{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;color:var(--stone);display:flex;justify-content:space-between;}
+.plan-day-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:12px;}
+.plan-day-cell{aspect-ratio:1;border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:'Jost',sans-serif;font-size:9px;color:var(--stone);background:var(--linen);}
+.plan-day-cell.done{background:var(--sage);color:#fff;}
+.plan-day-cell.today{border:2px solid var(--gold);}
+/* FLASHCARDS */
+.fc-btn{flex:1;padding:12px;border-radius:14px;border:none;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+.fc-btn-yes{background:var(--sage);color:#fff;}
+.fc-btn-no{background:var(--linen);color:var(--stone);}
+#fc-card:active{transform:scale(.98);}
+/* MOOD PICKER */
+.mood-btn{background:#fff;border:1.5px solid var(--linen);border-radius:20px;padding:7px 13px;font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.5px;color:var(--stone);cursor:pointer;transition:all .2s;}
+.mood-btn.selected{background:var(--sage-xl);border-color:var(--sage);color:var(--ink);}
+.mood-tag{display:inline-block;background:var(--sage-xl);border:1px solid var(--sage);border-radius:10px;padding:2px 8px;font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--sage);margin-top:4px;}
+/* HL VIEW TOGGLE */
+.hl-view-btn{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;padding:5px 12px;border:1.5px solid var(--linen);border-radius:20px;background:#fff;color:var(--stone);cursor:pointer;transition:all .2s;}
+.hl-view-btn.active{background:var(--sage);border-color:var(--sage);color:#fff;}
+/* STATS */
+.stat-card{background:#fff;border:1px solid var(--linen);border-radius:14px;padding:16px;margin-bottom:12px;}
+.stat-title{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin-bottom:12px;}
+.stat-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--linen);}
+.stat-row:last-child{border-bottom:none;}
+.stat-book{font-family:'EB Garamond',serif;font-size:16px;color:var(--ink);}
+.stat-count{font-family:'Jost',sans-serif;font-size:11px;color:var(--sage);background:var(--sage-xl);padding:2px 10px;border-radius:10px;}
+.stat-bar-wrap{flex:1;margin:0 10px;background:var(--linen);border-radius:4px;height:6px;overflow:hidden;}
+.stat-bar{height:6px;background:var(--sage);border-radius:4px;transition:width .4s;}
+.stat-big{font-family:'Playfair Display',serif;font-size:36px;color:var(--ink);text-align:center;margin:8px 0 2px;}
+.stat-label{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);text-align:center;}
+.stat-mood-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-family:'Jost',sans-serif;font-size:11px;color:var(--ink);}
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;}
+.stat-mini{background:#fff;border:1px solid var(--linen);border-radius:12px;padding:14px;text-align:center;}
 .verse-pick-btn{width:100%;padding:10px 14px;background:#FDFAF6;border:1.5px dashed var(--sage);border-radius:12px;color:var(--sage);font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1.5px;text-transform:uppercase;cursor:pointer;margin-top:6px;transition:all .2s;}
 .verse-pick-btn:active{background:var(--sage-xl);}
 .picked-verse-box{background:var(--sage-xl);border:1.5px solid var(--sage);border-radius:12px;padding:12px 14px;margin-top:6px;display:none;}
@@ -400,6 +446,19 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
           <div class="editor" id="jp" contenteditable="true" style="min-height:160px;"></div>
         </div>
       </div>
+      <div class="jsec">
+        <label class="jlabel">How is your heart today?</label>
+        <div id="mood-picker" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:6px;">
+          <button class="mood-btn" onclick="selectMood(this,'🙏 Grateful')">🙏 Grateful</button>
+          <button class="mood-btn" onclick="selectMood(this,'☮️ Peaceful')">☮️ Peaceful</button>
+          <button class="mood-btn" onclick="selectMood(this,'💪 Hopeful')">💪 Hopeful</button>
+          <button class="mood-btn" onclick="selectMood(this,'😔 Struggling')">😔 Struggling</button>
+          <button class="mood-btn" onclick="selectMood(this,'😟 Anxious')">😟 Anxious</button>
+          <button class="mood-btn" onclick="selectMood(this,'😢 Hurting')">😢 Hurting</button>
+          <button class="mood-btn" onclick="selectMood(this,'🔥 On Fire')">🔥 On Fire</button>
+          <button class="mood-btn" onclick="selectMood(this,'🤔 Searching')">🤔 Searching</button>
+        </div>
+      </div>
       <button class="btn btn-sage" onclick="saveEntry()" id="sbtn">Save Devotion</button>
       <button class="btn btn-ghost" onclick="clearForm()" style="margin-top:8px;" id="cbtn">Clear</button>
     </div>
@@ -407,6 +466,12 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
     <!-- JOURNAL -->
     <div class="tab" id="tab-entries">
       <div class="clabel" id="jtl" style="margin-bottom:14px;">My Journal</div>
+      <div style="position:relative;margin-bottom:14px;">
+        <input type="text" id="journal-search" oninput="renderEntries()"
+          placeholder="🔍 Search entries…"
+          style="width:100%;box-sizing:border-box;padding:10px 36px 10px 14px;background:#fff;border:1.5px solid var(--linen);border-radius:12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--ink);outline:none;">
+        <span id="search-clear" onclick="clearSearch()" style="display:none;position:absolute;right:12px;top:50%;transform:translateY(-50%);cursor:pointer;color:var(--stone);font-size:16px;">✕</span>
+      </div>
       <div id="elist"></div>
     </div>
 
@@ -511,8 +576,16 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
 
     <!-- HIGHLIGHTS -->
     <div class="tab" id="tab-highlights">
-      <div class="clabel" id="hltl" style="margin-bottom:14px;">✦ My Highlights</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+        <div class="clabel" id="hltl" style="margin:0;">✦ My Highlights</div>
+        <div style="display:flex;gap:6px;">
+          <button class="hl-view-btn active" id="hl-view-list" onclick="switchHLView('list',this)">Highlights</button>
+          <button class="hl-view-btn" id="hl-view-stats" onclick="switchHLView('stats',this)">📊 Stats</button>
+          <button class="hl-view-btn" onclick="openFlashcards()">🃏 Quiz</button>
+        </div>
+      </div>
       <div id="hllist"></div>
+      <div id="hlstats" style="display:none;"></div>
     </div>
 
     <!-- ALARM -->
@@ -540,6 +613,32 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
       </div>
     </div>
 
+    <!-- READING PLAN -->
+    <div class="tab" id="tab-plan">
+      <div class="clabel" style="margin-bottom:4px;">📅 Bible Reading Plan</div>
+      <div style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1px;color:var(--stone);margin-bottom:16px;" id="plan-date-label"></div>
+
+      <!-- Plan picker (shown if no active plan) -->
+      <div id="plan-picker">
+        <div style="font-family:'Jost',sans-serif;font-size:11px;color:var(--stone);margin-bottom:12px;letter-spacing:.5px;">Choose a reading plan to start:</div>
+        <div id="plan-list"></div>
+      </div>
+
+      <!-- Active plan view -->
+      <div id="plan-active" style="display:none;">
+        <div class="plan-header-card" id="plan-header-card"></div>
+        <div style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin:16px 0 8px;">Today's Reading</div>
+        <div id="plan-today-readings"></div>
+        <div style="margin-top:16px;display:flex;gap:8px;">
+          <button class="btn btn-sage" onclick="markPlanDay()" id="plan-mark-btn">✓ Mark as Read</button>
+          <button class="btn btn-ghost" onclick="resetPlan()" style="padding:10px 14px;font-size:11px;">Change Plan</button>
+        </div>
+        <div style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--stone);margin:20px 0 8px;">Progress</div>
+        <div id="plan-progress-wrap"></div>
+        <div id="plan-calendar"></div>
+      </div>
+    </div>
+
   </div><!-- /content -->
 
   <!-- NAV -->
@@ -550,12 +649,43 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
     <button class="nbtn" id="nav-prayer" onclick="switchTab('prayer')"><span class="nicon">🙏</span><span class="nlabel" id="nl-prayer">Prayer</span></button>
     <button class="nbtn" id="nav-bible" onclick="switchTab('bible')"><span class="nicon">📜</span><span class="nlabel" id="nl-bible">Bible</span></button>
     <button class="nbtn" id="nav-highlights" onclick="switchTab('highlights')"><span class="nicon">🌟</span><span class="nlabel" id="nl-highlights">Highlights</span></button>
+    <button class="nbtn" id="nav-plan" onclick="switchTab('plan')"><span class="nicon">📅</span><span class="nlabel" id="nl-plan">Plan</span></button>
     <button class="nbtn" id="nav-alarm" onclick="switchTab('alarm')"><span class="nicon">🕊️</span><span class="nlabel" id="nl-alarm">Alarm</span></button>
   </div>
 </div>
 
-<!-- MODAL -->
-<div id="moverlay" onclick="if(event.target===this)closeModal()">
+<!-- FLASHCARD OVERLAY -->
+<div id="fc-overlay" style="display:none;position:fixed;inset:0;background:var(--cream);z-index:500;flex-direction:column;align-items:center;justify-content:center;padding:24px;">
+  <div style="width:100%;max-width:460px;display:flex;flex-direction:column;align-items:center;gap:16px;">
+    <div style="display:flex;justify-content:space-between;align-items:center;width:100%;">
+      <div class="clabel" style="margin:0;">🃏 Verse Memory</div>
+      <button onclick="closeFlashcards()" style="background:none;border:none;font-size:22px;color:var(--stone);cursor:pointer;">✕</button>
+    </div>
+    <div id="fc-progress" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;color:var(--stone);"></div>
+    <!-- Card -->
+    <div id="fc-card" onclick="flipCard()" style="width:100%;min-height:220px;background:#fff;border:1.5px solid var(--linen);border-radius:20px;padding:28px 24px;cursor:pointer;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;box-shadow:0 4px 20px rgba(61,51,40,.07);transition:transform .15s;">
+      <div id="fc-ref" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:2px;color:var(--gold);text-transform:uppercase;"></div>
+      <div id="fc-front" style="font-family:'EB Garamond',serif;font-size:19px;font-style:italic;color:var(--ink);line-height:1.7;text-align:center;"></div>
+      <div id="fc-hint" style="font-family:'Jost',sans-serif;font-size:10px;color:var(--stone);letter-spacing:1px;margin-top:4px;">TAP TO REVEAL REFERENCE</div>
+    </div>
+    <!-- Result buttons -->
+    <div id="fc-result" style="display:none;width:100%;display:flex;gap:10px;justify-content:center;">
+      <button class="fc-btn fc-btn-no" onclick="fcAnswer(false)">😅 Still Learning</button>
+      <button class="fc-btn fc-btn-yes" onclick="fcAnswer(true)">✓ Got It!</button>
+    </div>
+    <div id="fc-next-wrap" style="display:none;width:100%;">
+      <button class="btn btn-sage" style="width:100%;" onclick="fcNext()">Next →</button>
+    </div>
+    <div id="fc-done" style="display:none;text-align:center;">
+      <div style="font-size:40px;margin-bottom:8px;">🎉</div>
+      <div style="font-family:'Playfair Display',serif;font-size:22px;color:var(--ink);margin-bottom:4px;">Session Complete!</div>
+      <div id="fc-score" style="font-family:'Jost',sans-serif;font-size:12px;color:var(--stone);letter-spacing:1px;margin-bottom:20px;"></div>
+      <button class="btn btn-sage" onclick="openFlashcards()">Practice Again</button>
+    </div>
+  </div>
+</div>
+
+
   <div id="modal">
     <div class="mhandle"></div>
     <div id="mtitle" style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;"></div>
@@ -822,7 +952,12 @@ setInterval(tick,1000); tick();
 // ============================================================
 // WRITE TAB — MULTI-VERSE PICKER
 // ============================================================
-var verseRows = []; // [{id, book, chap, verses, fromV, toV, chapVerses}]
+var selectedMood = '';
+function selectMood(btn, mood){
+  document.querySelectorAll('.mood-btn').forEach(function(b){b.classList.remove('selected');});
+  if(selectedMood===mood){ selectedMood=''; } // toggle off
+  else { btn.classList.add('selected'); selectedMood=mood; }
+}
 var verseRowCounter = 0;
 
 function initWriteBooks(){
@@ -940,20 +1075,57 @@ function renderStreak(){
 
 function renderEntries(){
   var el=document.getElementById('elist');
-  if(!entries.length){el.innerHTML='<div class="empty-state">'+(lang==='en'?'No devotions yet. Start writing! ✦':'Wala pang devotion. Magsimula nang sumulat! ✦')+'</div>';return;}
+  var searchEl=document.getElementById('journal-search');
+  var clearEl=document.getElementById('search-clear');
+  var q=(searchEl?searchEl.value:'').toLowerCase().trim();
+  if(clearEl) clearEl.style.display=q?'block':'none';
+
+  var list=[].concat(entries).reverse();
+  if(q){
+    list=list.filter(function(e){
+      return (e.verse&&e.verse.toLowerCase().includes(q))
+        ||(e.ref&&e.ref.toLowerCase().includes(q))
+        ||(e.reflection&&e.reflection.toLowerCase().includes(q))
+        ||(e.prayer&&e.prayer.toLowerCase().includes(q))
+        ||(e.dlabel&&e.dlabel.toLowerCase().includes(q))
+        ||(e.date&&e.date.toLowerCase().includes(q));
+    });
+  }
+
+  if(!entries.length){
+    el.innerHTML='<div class="empty-state">'+(lang==='en'?'No devotions yet. Start writing! ✦':'Wala pang devotion. Magsimula nang sumulat! ✦')+'</div>';
+    return;
+  }
+  if(!list.length){
+    el.innerHTML='<div class="empty-state">No entries found for "'+q+'"</div>';
+    return;
+  }
+
   var html='';
-  var rev=[].concat(entries).reverse();
-  rev.forEach(function(e){
+  list.forEach(function(e){
+    var verse=e.verse||'';
+    // Highlight search term in title
+    var title=verse.substring(0,60)+(verse.length>60?'…':'');
+    if(q&&title.toLowerCase().includes(q)){
+      var re=new RegExp('('+q.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+')','gi');
+      title=title.replace(re,'<mark style="background:#FFF3C4;border-radius:2px;">$1</mark>');
+    }
     html+='<div class="ecard" onclick="openEntry('+e.id+')">'
       +'<div class="edate">'+(e.dlabel||e.date)+'</div>'
-      +(e.verse?'<div class="etitle">'+e.verse.substring(0,60)+(e.verse.length>60?'…':'')+'</div>':'')
+      +(verse?'<div class="etitle">'+title+'</div>':'')
       +(e.ref?'<div class="evprev">'+e.ref+'</div>':'')
+      +(e.mood?'<div class="mood-tag">'+e.mood+'</div>':'')
       +'<div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;">'
       +'<div class="etags"><span class="etag '+(e.verse?'on':'')+'">Verse</span><span class="etag '+(e.reflection?'on':'')+'">Reflection</span><span class="etag '+(e.prayer?'on':'')+'">Prayer</span></div>'
       +'<button onclick="event.stopPropagation();delEntry('+e.id+')" style="background:none;border:none;color:var(--linen);font-size:18px;cursor:pointer;padding:2px 6px;">✕</button>'
       +'</div></div>';
   });
   el.innerHTML=html;
+}
+
+function clearSearch(){
+  var s=document.getElementById('journal-search');
+  if(s){s.value='';renderEntries();s.focus();}
 }
 
 function renderPrayers(){
@@ -1050,7 +1222,7 @@ function saveEntry(){
   var entry={
     id:Date.now(),date:now.toDateString(),
     dlabel:now.toLocaleDateString(lang==='en'?'en-US':'fil-PH',{weekday:'short',year:'numeric',month:'short',day:'numeric'}),
-    verse:v,verseHtml:window._combinedVerseHtml||'',verses:versesArr,ref:ref,reflection:rhtml,prayer:phtml
+    verse:v,verseHtml:window._combinedVerseHtml||'',verses:versesArr,ref:ref,reflection:rhtml,prayer:phtml,mood:selectedMood
   };
   if(db&&currentUser){
     userCol('entries').doc(String(entry.id)).set(entry).then(function(){syncBar(lang==='en'?'✓ Saved':'✓ Nai-save');});
@@ -1064,6 +1236,8 @@ function saveEntry(){
 }
 
 function clearForm(){
+  selectedMood='';
+  document.querySelectorAll('.mood-btn').forEach(function(b){b.classList.remove('selected');});
   verseRows=[]; verseRowCounter=0;
   window._combinedVerseText=''; window._combinedVerseRef='';
   renderVerseRows();
@@ -1087,6 +1261,9 @@ function openEntry(id){
   if(!e)return;
   currentModalEntry=e;
   document.getElementById('mdate').textContent=e.dlabel||e.date;
+  // Show mood if present
+  var mdateEl=document.getElementById('mdate');
+  mdateEl.innerHTML=(e.dlabel||e.date)+(e.mood?' &nbsp;<span style="font-size:12px;background:var(--sage-xl);border:1px solid var(--sage);border-radius:8px;padding:2px 8px;color:var(--sage);font-family:\'Jost\',sans-serif;letter-spacing:.5px;">'+e.mood+'</span>':'');
 
   // Build verse display — per verse with ref label + number
   var verseHtml='';
@@ -1315,6 +1492,7 @@ function switchTab(name){
   document.getElementById('nav-'+name).classList.add('active');
   if(name==='write')initWriteBooks();
   if(name==='highlights')renderHighlightsTab();
+  if(name==='plan')initPlanTab();
   if(name==='prayer')initPrayerTab();
 }
 
@@ -1573,9 +1751,204 @@ function removeHL(key){
   renderHighlightsTab();
 }
 
+function switchHLView(view, btn){
+  document.querySelectorAll('.hl-view-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  document.getElementById('hllist').style.display = view==='list'?'block':'none';
+  document.getElementById('hlstats').style.display = view==='stats'?'block':'none';
+  if(view==='stats') renderStats();
+}
+
+function renderStats(){
+  var el=document.getElementById('hlstats');
+  if(!el) return;
+  var hlKeys=Object.keys(hlData);
+  var totalHL=hlKeys.length;
+  var totalEntries=entries.length;
+  var totalDays=streak;
+
+  // Books frequency from highlights
+  var bookCount={};
+  hlKeys.forEach(function(k){
+    var parts=k.split('_');
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    bookCount[bk]=(bookCount[bk]||0)+1;
+  });
+  // Books from journal entries
+  var journalBooks={};
+  entries.forEach(function(e){
+    if(e.verses&&e.verses.length){
+      e.verses.forEach(function(v){
+        if(v.ref){
+          var book=v.ref.replace(/\s+\d+:\d+$/,'');
+          journalBooks[book]=(journalBooks[book]||0)+1;
+        }
+      });
+    } else if(e.ref){
+      e.ref.split('•').forEach(function(r){
+        var book=r.trim().replace(/\s+\d+:\d+$/,'');
+        if(book) journalBooks[book]=(journalBooks[book]||0)+1;
+      });
+    }
+  });
+  // Mood breakdown
+  var moodCount={};
+  entries.forEach(function(e){
+    if(e.mood) moodCount[e.mood]=(moodCount[e.mood]||0)+1;
+  });
+  var topMoods=Object.keys(moodCount).sort(function(a,b){return moodCount[b]-moodCount[a];}).slice(0,5);
+
+  // Top highlighted books
+  var topHL=Object.keys(bookCount).sort(function(a,b){return bookCount[b]-bookCount[a];}).slice(0,5);
+  var maxHL=topHL.length?bookCount[topHL[0]]:1;
+
+  // Top journal books
+  var topJB=Object.keys(journalBooks).sort(function(a,b){return journalBooks[b]-journalBooks[a];}).slice(0,5);
+  var maxJB=topJB.length?journalBooks[topJB[0]]:1;
+
+  var html='';
+
+  // Summary grid
+  html+='<div class="stat-grid">'
+    +'<div class="stat-mini"><div class="stat-big">'+totalHL+'</div><div class="stat-label">Highlights</div></div>'
+    +'<div class="stat-mini"><div class="stat-big">'+totalEntries+'</div><div class="stat-label">Devotions</div></div>'
+    +'<div class="stat-mini"><div class="stat-big">'+totalDays+'</div><div class="stat-label">Day Streak</div></div>'
+    +'<div class="stat-mini"><div class="stat-big">'+Object.keys(bookCount).length+'</div><div class="stat-label">Books Read</div></div>'
+    +'</div>';
+
+  // Top highlighted books
+  if(topHL.length){
+    html+='<div class="stat-card"><div class="stat-title">📖 Most Highlighted Books</div>';
+    topHL.forEach(function(b){
+      var pct=Math.round(bookCount[b]/maxHL*100);
+      html+='<div class="stat-row">'
+        +'<span class="stat-book">'+b+'</span>'
+        +'<div class="stat-bar-wrap"><div class="stat-bar" style="width:'+pct+'%"></div></div>'
+        +'<span class="stat-count">'+bookCount[b]+'</span>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+
+  // Top journal books
+  if(topJB.length){
+    html+='<div class="stat-card"><div class="stat-title">✍️ Most Written About</div>';
+    topJB.forEach(function(b){
+      var pct=Math.round(journalBooks[b]/maxJB*100);
+      html+='<div class="stat-row">'
+        +'<span class="stat-book">'+b+'</span>'
+        +'<div class="stat-bar-wrap"><div class="stat-bar" style="width:'+pct+'%;background:var(--gold);"></div></div>'
+        +'<span class="stat-count" style="background:#FFF8E8;color:var(--gold);">'+journalBooks[b]+'</span>'
+        +'</div>';
+    });
+    html+='</div>';
+  }
+
+  // Mood breakdown
+  if(topMoods.length){
+    html+='<div class="stat-card"><div class="stat-title">💗 Heart Patterns</div>';
+    topMoods.forEach(function(m){
+      html+='<div class="stat-mood-row"><span>'+m+'</span><span class="stat-count">'+moodCount[m]+'x</span></div>';
+    });
+    html+='</div>';
+  }
+
+  if(!totalHL&&!totalEntries){
+    html='<div class="empty-state">Start highlighting verses and writing devotions to see your stats! ✦</div>';
+  }
+
+  el.innerHTML=html;
+}
+
 // ============================================================
-// HIGHLIGHT PICKER (for Write tab)
+// FLASHCARDS
 // ============================================================
+var fcCards=[], fcIndex=0, fcCorrect=0, fcFlipped=false;
+
+function openFlashcards(){
+  var keys=Object.keys(hlData);
+  if(!keys.length){alert('Wala pang highlights. Mag-highlight muna sa Bible tab! 🌟');return;}
+
+  // Build cards from highlights with cached text
+  fcCards=[];
+  keys.forEach(function(k){
+    var parts=k.split('_');
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var cacheKey=bk.replace(/ /g,'_')+'_'+ch+'_kjv';
+    var vtext='';
+    if(bCache[cacheKey]){
+      var found=bCache[cacheKey].find(function(x){return String(x.n)===String(vn);});
+      if(found) vtext=found.t;
+    }
+    if(vtext) fcCards.push({ref:bk+' '+ch+':'+vn, text:vtext, got:false});
+  });
+
+  if(!fcCards.length){
+    alert('Buksan mo muna ang mga highlighted chapters sa Bible tab para ma-load ang text! 🙏');
+    return;
+  }
+
+  // Shuffle
+  fcCards=fcCards.sort(function(){return Math.random()-.5;});
+  fcIndex=0; fcCorrect=0;
+
+  document.getElementById('fc-overlay').style.display='flex';
+  document.getElementById('fc-done').style.display='none';
+  document.getElementById('fc-card').style.display='flex';
+  showFCCard();
+}
+
+function showFCCard(){
+  if(fcIndex>=fcCards.length){showFCDone();return;}
+  var card=fcCards[fcIndex];
+  fcFlipped=false;
+  document.getElementById('fc-ref').style.display='none';
+  document.getElementById('fc-front').textContent=card.text;
+  document.getElementById('fc-hint').style.display='block';
+  document.getElementById('fc-hint').textContent='TAP TO REVEAL REFERENCE';
+  document.getElementById('fc-result').style.display='none';
+  document.getElementById('fc-next-wrap').style.display='none';
+  document.getElementById('fc-progress').textContent=(fcIndex+1)+' / '+fcCards.length;
+}
+
+function flipCard(){
+  if(fcFlipped) return;
+  fcFlipped=true;
+  var card=fcCards[fcIndex];
+  document.getElementById('fc-ref').textContent=card.ref;
+  document.getElementById('fc-ref').style.display='block';
+  document.getElementById('fc-hint').style.display='none';
+  document.getElementById('fc-result').style.display='flex';
+}
+
+function fcAnswer(correct){
+  if(correct){ fcCorrect++; fcCards[fcIndex].got=true; }
+  document.getElementById('fc-result').style.display='none';
+  document.getElementById('fc-next-wrap').style.display='block';
+}
+
+function fcNext(){
+  fcIndex++;
+  document.getElementById('fc-next-wrap').style.display='none';
+  if(fcIndex>=fcCards.length){ showFCDone(); return; }
+  showFCCard();
+}
+
+function showFCDone(){
+  document.getElementById('fc-card').style.display='none';
+  document.getElementById('fc-result').style.display='none';
+  document.getElementById('fc-next-wrap').style.display='none';
+  document.getElementById('fc-done').style.display='block';
+  document.getElementById('fc-score').textContent=fcCorrect+' / '+fcCards.length+' correct  •  '+Math.round(fcCorrect/fcCards.length*100)+'%';
+}
+
+function closeFlashcards(){
+  document.getElementById('fc-overlay').style.display='none';
+}
+
+
 function openHighlightPicker(){
   var overlay=document.getElementById('hl-picker-overlay');
   var list=document.getElementById('hl-picker-list');
@@ -1675,7 +2048,7 @@ function translateChapter(){
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
     body:JSON.stringify({
-      model:'mistralai/mistral-small-3.1-24b-instruct:free',
+      model:'google/gemma-3-12b-it:free',
       max_tokens:4000,
       messages:[{role:'user',content:prompt}]
     })
@@ -1769,7 +2142,7 @@ function generateDailyAI(verseText, verseRef){
       'HTTP-Referer':'https://devotion-theta.vercel.app'
     },
     body:JSON.stringify({
-      model:'mistralai/mistral-small-3.1-24b-instruct:free',
+      model:'google/gemma-3-12b-it:free',
       max_tokens:600,
       messages:[{role:'user',content:prompt}]
     })
@@ -1845,7 +2218,7 @@ function generatePrayer(){
     method:'POST',
     headers:{'Content-Type':'application/json','Authorization':'Bearer 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','HTTP-Referer':'https://devotion-five.vercel.app'},
     body:JSON.stringify({
-      model:'mistralai/mistral-small-3.1-24b-instruct:free',
+      model:'google/gemma-3-12b-it:free',
       max_tokens:800,
       messages:[{role:'user',content:prompt}]
     })
@@ -1896,6 +2269,218 @@ function copyPrayer(){
     document.execCommand('copy');
     document.body.removeChild(ta);
   });
+}
+
+// ============================================================
+// READING PLAN
+// ============================================================
+var PLANS = [
+  {
+    id:'psalms30',
+    name:'30 Days in Psalms',
+    desc:'Discover peace and praise through the Psalms',
+    days:30,
+    readings:[
+      ['Psalms 1','Psalms 2','Psalms 3'],['Psalms 4','Psalms 5','Psalms 6'],
+      ['Psalms 7','Psalms 8','Psalms 9'],['Psalms 10','Psalms 11','Psalms 12'],
+      ['Psalms 13','Psalms 14','Psalms 15'],['Psalms 16','Psalms 17','Psalms 18'],
+      ['Psalms 19','Psalms 20','Psalms 21'],['Psalms 22','Psalms 23','Psalms 24'],
+      ['Psalms 25','Psalms 26','Psalms 27'],['Psalms 28','Psalms 29','Psalms 30'],
+      ['Psalms 31','Psalms 32','Psalms 33'],['Psalms 34','Psalms 35','Psalms 36'],
+      ['Psalms 37','Psalms 38','Psalms 39'],['Psalms 40','Psalms 41','Psalms 42'],
+      ['Psalms 43','Psalms 44','Psalms 45'],['Psalms 46','Psalms 47','Psalms 48'],
+      ['Psalms 49','Psalms 50','Psalms 51'],['Psalms 52','Psalms 53','Psalms 54'],
+      ['Psalms 55','Psalms 56','Psalms 57'],['Psalms 58','Psalms 59','Psalms 60'],
+      ['Psalms 61','Psalms 62','Psalms 63'],['Psalms 64','Psalms 65','Psalms 66'],
+      ['Psalms 67','Psalms 68','Psalms 69'],['Psalms 70','Psalms 71','Psalms 72'],
+      ['Psalms 73','Psalms 74','Psalms 75'],['Psalms 76','Psalms 77','Psalms 78'],
+      ['Psalms 79','Psalms 80','Psalms 81'],['Psalms 82','Psalms 83','Psalms 84'],
+      ['Psalms 85','Psalms 86','Psalms 87'],['Psalms 88','Psalms 89','Psalms 90']
+    ]
+  },
+  {
+    id:'john21',
+    name:'21 Days in John',
+    desc:'Walk through the Gospel of John chapter by chapter',
+    days:21,
+    readings:[
+      ['John 1'],['John 2'],['John 3'],['John 4'],['John 5'],['John 6'],['John 7'],
+      ['John 8'],['John 9'],['John 10'],['John 11'],['John 12'],['John 13'],['John 14'],
+      ['John 15'],['John 16'],['John 17'],['John 18'],['John 19'],['John 20'],['John 21']
+    ]
+  },
+  {
+    id:'proverbs31',
+    name:'Proverbs in a Month',
+    desc:'One chapter of Proverbs every day for 31 days',
+    days:31,
+    readings:[
+      ['Proverbs 1'],['Proverbs 2'],['Proverbs 3'],['Proverbs 4'],['Proverbs 5'],
+      ['Proverbs 6'],['Proverbs 7'],['Proverbs 8'],['Proverbs 9'],['Proverbs 10'],
+      ['Proverbs 11'],['Proverbs 12'],['Proverbs 13'],['Proverbs 14'],['Proverbs 15'],
+      ['Proverbs 16'],['Proverbs 17'],['Proverbs 18'],['Proverbs 19'],['Proverbs 20'],
+      ['Proverbs 21'],['Proverbs 22'],['Proverbs 23'],['Proverbs 24'],['Proverbs 25'],
+      ['Proverbs 26'],['Proverbs 27'],['Proverbs 28'],['Proverbs 29'],['Proverbs 30'],
+      ['Proverbs 31']
+    ]
+  },
+  {
+    id:'nt90',
+    name:'New Testament in 90 Days',
+    desc:'Read the entire New Testament in 3 months',
+    days:90,
+    readings:(function(){
+      var ntBooks=[
+        {b:'Matthew',c:28},{b:'Mark',c:16},{b:'Luke',c:24},{b:'John',c:21},
+        {b:'Acts',c:28},{b:'Romans',c:16},{b:'1 Corinthians',c:16},{b:'2 Corinthians',c:13},
+        {b:'Galatians',c:6},{b:'Ephesians',c:6},{b:'Philippians',c:4},{b:'Colossians',c:4},
+        {b:'1 Thessalonians',c:5},{b:'2 Thessalonians',c:3},{b:'1 Timothy',c:6},
+        {b:'2 Timothy',c:4},{b:'Titus',c:3},{b:'Philemon',c:1},{b:'Hebrews',c:13},
+        {b:'James',c:5},{b:'1 Peter',c:5},{b:'2 Peter',c:3},{b:'1 John',c:5},
+        {b:'2 John',c:1},{b:'3 John',c:1},{b:'Jude',c:1},{b:'Revelation',c:22}
+      ];
+      var allChaps=[];
+      ntBooks.forEach(function(bk){for(var i=1;i<=bk.c;i++)allChaps.push(bk.b+' '+i);});
+      var days=[]; var perDay=Math.ceil(allChaps.length/90);
+      for(var i=0;i<allChaps.length;i+=perDay) days.push(allChaps.slice(i,i+perDay));
+      return days.slice(0,90);
+    })()
+  }
+];
+
+var activePlan=null; // {id, startDate, doneDays:[]}
+
+function loadPlan(){
+  try{ activePlan=JSON.parse(localStorage.getItem(lsKey('reading_plan'))||'null'); }catch(e){ activePlan=null; }
+}
+
+function savePlanData(){
+  try{ localStorage.setItem(lsKey('reading_plan'),JSON.stringify(activePlan)); }catch(e){}
+}
+
+function initPlanTab(){
+  loadPlan();
+  document.getElementById('plan-date-label').textContent=new Date().toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric'});
+  if(activePlan){
+    renderActivePlan();
+  } else {
+    renderPlanPicker();
+  }
+}
+
+function renderPlanPicker(){
+  document.getElementById('plan-picker').style.display='block';
+  document.getElementById('plan-active').style.display='none';
+  var html='';
+  PLANS.forEach(function(p){
+    html+='<div class="plan-card" onclick="startPlan(\''+p.id+'\')">'
+      +'<div class="plan-name">'+p.name+'</div>'
+      +'<div class="plan-desc">'+p.desc+'</div>'
+      +'<div class="plan-meta">'+p.days+' days</div>'
+      +'</div>';
+  });
+  document.getElementById('plan-list').innerHTML=html;
+}
+
+function startPlan(id){
+  if(!confirm('Start this reading plan? Your current progress will reset.')) return;
+  activePlan={id:id, startDate:new Date().toDateString(), doneDays:[]};
+  savePlanData();
+  renderActivePlan();
+}
+
+function resetPlan(){
+  if(!confirm('Change reading plan? This will clear your progress.')) return;
+  activePlan=null;
+  savePlanData();
+  renderPlanPicker();
+}
+
+function getCurrentDay(){
+  if(!activePlan) return 0;
+  var start=new Date(activePlan.startDate);
+  var today=new Date();
+  start.setHours(0,0,0,0); today.setHours(0,0,0,0);
+  return Math.floor((today-start)/(86400000));
+}
+
+function renderActivePlan(){
+  document.getElementById('plan-picker').style.display='none';
+  document.getElementById('plan-active').style.display='block';
+
+  var plan=PLANS.find(function(p){return p.id===activePlan.id;});
+  if(!plan) return;
+
+  var dayIdx=getCurrentDay();
+  var doneDays=activePlan.doneDays||[];
+  var completed=doneDays.length;
+  var pct=Math.round(completed/plan.days*100);
+  var todayDone=doneDays.indexOf(dayIdx)!==-1;
+
+  // Header
+  document.getElementById('plan-header-card').innerHTML=
+    '<div class="plan-header-name">'+plan.name+'</div>'
+    +'<div class="plan-header-sub">Day '+(dayIdx+1)+' of '+plan.days+' • '+pct+'% complete</div>';
+
+  // Today's readings
+  var todayReadings=plan.readings[Math.min(dayIdx,plan.days-1)]||[];
+  var html='';
+  todayReadings.forEach(function(ref){
+    var parts=ref.split(' ');
+    var chap=parts[parts.length-1];
+    var book=parts.slice(0,parts.length-1).join(' ');
+    html+='<div class="plan-reading-item" onclick="openBibleFromPlan(\''+book+'\',\''+chap+'\')">'
+      +'<div class="plan-reading-ref">'+ref+'</div>'
+      +'<div class="plan-reading-arrow">→</div>'
+      +'</div>';
+  });
+  if(todayDone) html='<div style="text-align:center;padding:20px;font-family:\'Jost\',sans-serif;font-size:12px;color:var(--sage);letter-spacing:1px;">✓ Completed for today! 🙏</div>';
+  document.getElementById('plan-today-readings').innerHTML=html;
+
+  // Mark button
+  var markBtn=document.getElementById('plan-mark-btn');
+  if(todayDone){ markBtn.textContent='✓ Done Today'; markBtn.disabled=true; markBtn.style.opacity='.5'; }
+  else{ markBtn.textContent='✓ Mark as Read'; markBtn.disabled=false; markBtn.style.opacity='1'; }
+
+  // Progress bar
+  document.getElementById('plan-progress-wrap').innerHTML=
+    '<div class="plan-progress-bar"><div class="plan-progress-fill" style="width:'+pct+'%"></div></div>'
+    +'<div class="plan-progress-label"><span>'+completed+' days done</span><span>'+pct+'%</span></div>';
+
+  // Mini calendar — show last 30 days
+  var calHtml='<div class="plan-day-grid">';
+  var show=Math.min(plan.days, Math.max(35, dayIdx+7));
+  for(var i=0;i<show;i++){
+    var done=doneDays.indexOf(i)!==-1;
+    var isToday=i===dayIdx;
+    calHtml+='<div class="plan-day-cell'+(done?' done':'')+(isToday?' today':'')+'">'+( i+1)+'</div>';
+  }
+  calHtml+='</div>';
+  document.getElementById('plan-calendar').innerHTML=calHtml;
+}
+
+function markPlanDay(){
+  if(!activePlan) return;
+  var dayIdx=getCurrentDay();
+  if(activePlan.doneDays.indexOf(dayIdx)===-1){
+    activePlan.doneDays.push(dayIdx);
+    savePlanData();
+  }
+  renderActivePlan();
+}
+
+function openBibleFromPlan(book, chap){
+  // Switch to Bible tab and load that chapter
+  switchTab('bible');
+  var bookSel=document.getElementById('bbook');
+  if(bookSel){
+    bookSel.value=book;
+    onBook();
+    setTimeout(function(){
+      var chapSel=document.getElementById('bchap');
+      if(chapSel){ chapSel.value=chap; chapSel.disabled=false; onChap(); }
+    },100);
+  }
 }
 
 // ============================================================
