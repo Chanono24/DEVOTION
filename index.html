@@ -1618,23 +1618,23 @@ function onChap(){
 
 function cKey(book,chap,ver){return book.replace(/ /g,'_')+'_'+chap+'_'+ver;}
 
-// Tagalog Bible book IDs for bible.helloao.org (Ang Dating Biblia 1905)
+// Book numbers for api.getbible.net/v2/tagalog (1=Genesis...66=Revelation)
 var TGL_BOOK_IDS={
-  'Genesis':'GEN','Exodus':'EXO','Leviticus':'LEV','Numbers':'NUM','Deuteronomy':'DEU',
-  'Joshua':'JOS','Judges':'JDG','Ruth':'RUT','1 Samuel':'1SA','2 Samuel':'2SA',
-  '1 Kings':'1KI','2 Kings':'2KI','1 Chronicles':'1CH','2 Chronicles':'2CH',
-  'Ezra':'EZR','Nehemiah':'NEH','Esther':'EST','Job':'JOB','Psalms':'PSA',
-  'Proverbs':'PRO','Ecclesiastes':'ECC','Song of Solomon':'SNG','Isaiah':'ISA',
-  'Jeremiah':'JER','Lamentations':'LAM','Ezekiel':'EZK','Daniel':'DAN',
-  'Hosea':'HOS','Joel':'JOL','Amos':'AMO','Obadiah':'OBA','Jonah':'JON',
-  'Micah':'MIC','Nahum':'NAM','Habakkuk':'HAB','Zephaniah':'ZEP','Haggai':'HAG',
-  'Zechariah':'ZEC','Malachi':'MAL','Matthew':'MAT','Mark':'MRK','Luke':'LUK',
-  'John':'JHN','Acts':'ACT','Romans':'ROM','1 Corinthians':'1CO','2 Corinthians':'2CO',
-  'Galatians':'GAL','Ephesians':'EPH','Philippians':'PHP','Colossians':'COL',
-  '1 Thessalonians':'1TH','2 Thessalonians':'2TH','1 Timothy':'1TI','2 Timothy':'2TI',
-  'Titus':'TIT','Philemon':'PHM','Hebrews':'HEB','James':'JAS','1 Peter':'1PE',
-  '2 Peter':'2PE','1 John':'1JN','2 John':'2JN','3 John':'3JN','Jude':'JUD',
-  'Revelation':'REV'
+  'Genesis':1,'Exodus':2,'Leviticus':3,'Numbers':4,'Deuteronomy':5,
+  'Joshua':6,'Judges':7,'Ruth':8,'1 Samuel':9,'2 Samuel':10,
+  '1 Kings':11,'2 Kings':12,'1 Chronicles':13,'2 Chronicles':14,
+  'Ezra':15,'Nehemiah':16,'Esther':17,'Job':18,'Psalms':19,
+  'Proverbs':20,'Ecclesiastes':21,'Song of Solomon':22,'Isaiah':23,
+  'Jeremiah':24,'Lamentations':25,'Ezekiel':26,'Daniel':27,
+  'Hosea':28,'Joel':29,'Amos':30,'Obadiah':31,'Jonah':32,
+  'Micah':33,'Nahum':34,'Habakkuk':35,'Zephaniah':36,'Haggai':37,
+  'Zechariah':38,'Malachi':39,'Matthew':40,'Mark':41,'Luke':42,
+  'John':43,'Acts':44,'Romans':45,'1 Corinthians':46,'2 Corinthians':47,
+  'Galatians':48,'Ephesians':49,'Philippians':50,'Colossians':51,
+  '1 Thessalonians':52,'2 Thessalonians':53,'1 Timothy':54,'2 Timothy':55,
+  'Titus':56,'Philemon':57,'Hebrews':58,'James':59,'1 Peter':60,
+  '2 Peter':61,'1 John':62,'2 John':63,'3 John':64,'Jude':65,
+  'Revelation':66
 };
 
 function loadChapter(book,chap){
@@ -1644,49 +1644,29 @@ function loadChapter(book,chap){
   wrap.innerHTML='<div class="bible-msg"><span class="spin">✦</span> Loading…</div>';
 
   if(bVer==='tgl'){
-    var bookId=TGL_BOOK_IDS[book];
-    if(!bookId){
-      wrap.innerHTML='<div class="bible-msg">⚠️ Book not found in Tagalog version.</div>';
+    var bookNum=TGL_BOOK_IDS[book];
+    if(!bookNum){
+      wrap.innerHTML='<div class="bible-msg">⚠️ Book not found.</div>';
       return;
     }
-    // Try tgl_adb first, then fallback tgl_adb2, then tglbpbs
-    var tglIds=['tgl_adb','TGLADB','tglbpbs'];
-    var tglIdx=0;
-    function tryTGL(){
-      if(tglIdx>=tglIds.length){
+    fetch('https://api.getbible.net/v2/tagalog/'+bookNum+'/'+chap+'.json')
+      .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
+      .then(function(data){
+        // getbible format: {chapter:{verses:{1:{verse,text},2:{verse,text}...}}}
+        var versesObj=data.verses||data.chapter&&data.chapter.verses;
+        if(!versesObj) throw new Error('empty');
+        var verses=Object.values(versesObj).map(function(v){
+          return{n:v.verse,t:(v.text||'').replace(/<[^>]+>/g,'').trim()};
+        });
+        verses.sort(function(a,b){return a.n-b.n;});
+        bCache[key]=verses;
+        try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
+        renderChap(book,chap,verses,false);
+      })
+      .catch(function(err){
+        console.error('TGL err:',err);
         wrap.innerHTML='<div class="bible-msg">📡 Hindi ma-load ang Tagalog Bibliya. Subukan ulit.</div>';
-        return;
-      }
-      var tid=tglIds[tglIdx++];
-      fetch('https://bible.helloao.org/api/'+tid+'/'+bookId+'/'+chap+'.json')
-        .then(function(r){
-          if(!r.ok) throw new Error('http '+r.status);
-          return r.json();
-        })
-        .then(function(data){
-          if(!data.verses||!data.verses.length) throw new Error('empty');
-          var verses=data.verses.map(function(v){
-            var text='';
-            if(v.content){
-              v.content.forEach(function(c){
-                if(typeof c==='string') text+=c;
-                else if(c.text) text+=c.text;
-                else if(c.verses) c.verses.forEach(function(vv){if(vv.text)text+=vv.text;});
-              });
-            } else if(v.text){ text=v.text; }
-            return{n:v.number||v.verse,t:text.trim()};
-          });
-          // Remember working ID
-          window._tglWorkingId=tid;
-          bCache[key]=verses;
-          try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
-          renderChap(book,chap,verses,false);
-        })
-        .catch(function(){ tryTGL(); });
-    }
-    // Use remembered working ID if available
-    if(window._tglWorkingId) tglIds=[window._tglWorkingId];
-    tryTGL();
+      });
     return;
   }
 
