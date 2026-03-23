@@ -1073,12 +1073,17 @@ function renderVerse(){
   var v=VERSES[d%VERSES.length];
   document.getElementById('vt').textContent='"'+(lang==='en'?v.en:v.tl)+'"';
   document.getElementById('vr').textContent=v.ref;
+  // Use built-in reflection per verse
+  document.getElementById('rt2').textContent=lang==='en'?v.re:v.rt;
+  // Morning prayer based on verse
+  var prayer=lang==='en'
+    ?'Lord, thank You for this verse today — "'+v.ref+'". Help me carry its truth into every moment of this day. Guard my heart and guide my steps. Amen.'
+    :'Panginoon, salamat sa talatang ito ngayon — "'+v.ref+'". Tulungan Mo akong dalhin ang katotohanang ito sa bawat sandali ngayong araw. Pangalagaan ang aking puso at gabayan ang aking mga hakbang. Amen.';
+  document.getElementById('qpt').textContent=prayer;
   var btn=document.getElementById('rbtn');
   var ra=document.getElementById('refl-area');
   if(showRefl){ra.classList.add('show');btn.style.display='none';}
   else{ra.classList.remove('show');btn.textContent=lang==='en'?'Read & Reflect':'Basahin at Pagnilayan';btn.style.display='block';}
-  // Generate AI content for today
-  generateDailyAI(lang==='en'?v.en:v.tl, v.ref);
 }
 
 function renderStreak(){
@@ -2202,92 +2207,6 @@ function renderChapTranslated(book,chap,verses){
   });
   html+='</div><button class="use-btn" id="use-btn" onclick="useVerse()">✦ Gamitin ang Talatang Ito</button></div>';
   wrap.innerHTML=html;
-}
-
-// ============================================================
-// ============================================================
-// DAILY AI — Reflection + Morning Prayer (auto-generated)
-// ============================================================
-var generatingDaily = false;
-
-function generateDailyAI(verseText, verseRef){
-  if(generatingDaily) return;
-
-  // Cache key includes the actual verse ref — guarantees it matches Today's verse
-  var safeRef = verseRef.replace(/[^a-zA-Z0-9]/g,'_');
-  var cacheKey = lsKey('daily_ai_v3_'+safeRef+'_'+lang);
-  var cached = null;
-  try { cached = JSON.parse(localStorage.getItem(cacheKey)||'null'); } catch(e){}
-  if(cached){
-    document.getElementById('rt2').textContent = cached.reflection;
-    document.getElementById('qpt').textContent = cached.prayer;
-    return;
-  }
-
-  // Show loading state
-  document.getElementById('rt2').textContent = lang==='en'?'✦ Generating reflection…':'✦ Ginagawa ang pagninilay…';
-  document.getElementById('qpt').textContent = lang==='en'?'✦ Generating prayer…':'✦ Ginagawa ang panalangin…';
-
-  generatingDaily = true;
-  var today = new Date();
-  var dayName = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'][today.getDay()];
-
-  var prompt = lang==='en'
-    ? 'You are writing a Christian daily devotional. Today\'s Bible verse is:\n\n"'+verseText+'" — '+verseRef+'\n\n'
-      +'Write TWO things directly, separated by ---PRAYER--- on its own line:\n\n'
-      +'First, a REFLECTION: 3-4 sentences that deeply explain what this specific verse means, what God is saying through it, and one practical way to live it out today. Be specific to this verse, not generic.\n\n'
-      +'---PRAYER---\n\n'
-      +'Then, a MORNING PRAYER: 3-4 sentences addressed to God, referencing the specific message of this verse. Start with "Lord," or "Father,". Make it personal and heartfelt.\n\n'
-      +'No labels, no markdown, no introduction. Just the reflection text, then ---PRAYER---, then the prayer text.'
-    : 'Ikaw ay nagsusulat ng Christian na pang-araw-araw na debosyon. Ang talata ngayon ay:\n\n"'+verseText+'" — '+verseRef+'\n\n'
-      +'Sumulat ng DALAWA, paghiwalayin ng ---PRAYER--- sa sariling linya:\n\n'
-      +'Una, PAGNINILAY: 3-4 pangungusap na nagpapaliwanag nang malalim kung ano ang ibig sabihin ng talatang ito, ano ang sinasabi ng Diyos dito, at isang praktikal na paraan para maisabuhay ito ngayon. Maging tiyak sa talatang ito.\n\n'
-      +'---PRAYER---\n\n'
-      +'Pagkatapos, PANALANGIN SA UMAGA: 3-4 pangungusap na nakatuon sa Diyos, binabanggit ang mensahe ng talatang ito. Magsimula sa "Panginoon," o "Ama,". Personal at taimtim.\n\n'
-      +'Walang label, walang markdown, walang panimula. Ang pagninilay lang, tapos ---PRAYER---, tapos ang panalangin.';
-
-  fetch('https://openrouter.ai/api/v1/chat/completions',{
-    method:'POST',
-    headers:{
-      'Content-Type':'application/json',
-      'Authorization':'Bearer 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',
-      'HTTP-Referer':'https://devotion-theta.vercel.app'
-    },
-    body:JSON.stringify({
-      model:'google/gemma-3-12b-it:free',
-      max_tokens:600,
-      messages:[{role:'user',content:prompt}]
-    })
-  })
-  .then(function(r){return r.json();})
-  .then(function(data){
-    generatingDaily=false;
-    var text=(data.choices&&data.choices[0]&&data.choices[0].message&&data.choices[0].message.content)||'';
-    if(!text){
-      document.getElementById('rt2').textContent=lang==='en'?'A moment with God each morning transforms your entire day.':'Ang sandali kasama ang Diyos tuwing umaga ay nagbabago ng buong araw mo.';
-      document.getElementById('qpt').textContent=lang==='en'?'Lord, thank You for this new day. Guide my steps and guard my heart. Amen.':'Panginoon, salamat sa bagong araw. Gabayan Mo ang aking mga hakbang. Amen.';
-      return;
-    }
-    var parts = text.split('---PRAYER---');
-    var reflection = (parts[0]||'').trim();
-    var prayer = (parts[1]||'').trim();
-    if(!prayer) {
-      // fallback split — half and half
-      var mid = Math.floor(text.length/2);
-      var split = text.indexOf('\n\n', mid);
-      reflection = text.substring(0, split>0?split:mid).trim();
-      prayer = text.substring(split>0?split:mid).trim();
-    }
-    document.getElementById('rt2').textContent = reflection;
-    document.getElementById('qpt').textContent = prayer;
-    // Cache for today
-    try { localStorage.setItem(cacheKey, JSON.stringify({reflection:reflection, prayer:prayer})); } catch(e){}
-  })
-  .catch(function(){
-    generatingDaily=false;
-    document.getElementById('rt2').textContent=lang==='en'?'A moment with God each morning transforms your entire day.':'Ang sandali kasama ang Diyos tuwing umaga ay nagbabago ng buong araw mo.';
-    document.getElementById('qpt').textContent=lang==='en'?'Lord, thank You for this new day. Guide my steps and guard my heart. Amen.':'Panginoon, salamat sa bagong araw. Gabayan Mo ang aking mga hakbang. Amen.';
-  });
 }
 
 // AI PRAYER GENERATOR
