@@ -687,6 +687,8 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
 </div>
 
 
+<!-- MODAL -->
+<div id="moverlay" onclick="if(event.target===this)closeModal()">
   <div id="modal">
     <div class="mhandle"></div>
     <div id="mdate" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-bottom:12px;"></div>
@@ -1642,36 +1644,49 @@ function loadChapter(book,chap){
   wrap.innerHTML='<div class="bible-msg"><span class="spin">✦</span> Loading…</div>';
 
   if(bVer==='tgl'){
-    // Use bible.helloao.org — Tagalog Ang Dating Biblia
     var bookId=TGL_BOOK_IDS[book];
     if(!bookId){
       wrap.innerHTML='<div class="bible-msg">⚠️ Book not found in Tagalog version.</div>';
       return;
     }
-    fetch('https://bible.helloao.org/api/tgl_adb/'+bookId+'/'+chap+'.json')
-      .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
-      .then(function(data){
-        if(!data.verses||!data.verses.length)throw new Error('empty');
-        var verses=data.verses.map(function(v){
-          // helloao format: verse.number and verse.content (array of parts)
-          var text='';
-          if(v.content){
-            v.content.forEach(function(c){
-              if(typeof c==='string') text+=c;
-              else if(c.text) text+=c.text;
-              else if(c.verses) c.verses.forEach(function(vv){if(vv.text)text+=vv.text;});
-            });
-          } else if(v.text){ text=v.text; }
-          return{n:v.number||v.verse,t:text.trim()};
-        });
-        bCache[key]=verses;
-        try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
-        renderChap(book,chap,verses,false);
-      })
-      .catch(function(err){
-        console.error('TGL fetch error:',err);
-        wrap.innerHTML='<div class="bible-msg">📡 '+(lang==='en'?'Could not load Tagalog Bible. Check internet.':'Hindi ma-load ang Tagalog Bibliya.')+'</div>';
-      });
+    // Try tgl_adb first, then fallback tgl_adb2, then tglbpbs
+    var tglIds=['tgl_adb','TGLADB','tglbpbs'];
+    var tglIdx=0;
+    function tryTGL(){
+      if(tglIdx>=tglIds.length){
+        wrap.innerHTML='<div class="bible-msg">📡 Hindi ma-load ang Tagalog Bibliya. Subukan ulit.</div>';
+        return;
+      }
+      var tid=tglIds[tglIdx++];
+      fetch('https://bible.helloao.org/api/'+tid+'/'+bookId+'/'+chap+'.json')
+        .then(function(r){
+          if(!r.ok) throw new Error('http '+r.status);
+          return r.json();
+        })
+        .then(function(data){
+          if(!data.verses||!data.verses.length) throw new Error('empty');
+          var verses=data.verses.map(function(v){
+            var text='';
+            if(v.content){
+              v.content.forEach(function(c){
+                if(typeof c==='string') text+=c;
+                else if(c.text) text+=c.text;
+                else if(c.verses) c.verses.forEach(function(vv){if(vv.text)text+=vv.text;});
+              });
+            } else if(v.text){ text=v.text; }
+            return{n:v.number||v.verse,t:text.trim()};
+          });
+          // Remember working ID
+          window._tglWorkingId=tid;
+          bCache[key]=verses;
+          try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
+          renderChap(book,chap,verses,false);
+        })
+        .catch(function(){ tryTGL(); });
+    }
+    // Use remembered working ID if available
+    if(window._tglWorkingId) tglIds=[window._tglWorkingId];
+    tryTGL();
     return;
   }
 
