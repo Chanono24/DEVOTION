@@ -561,6 +561,7 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
           <button class="vbtn" id="vbtn-asv" onclick="setVer('asv',this)">ASV</button>
           <button class="vbtn" id="vbtn-web" onclick="setVer('web',this)">WEB</button>
           <button class="vbtn" id="vbtn-bbe" onclick="setVer('bbe',this)">BBE</button>
+          <button class="vbtn" id="vbtn-tgl" onclick="setVer('tgl',this)">TGL</button>
         </div>
       </div>
       <div class="bible-selects">
@@ -688,21 +689,42 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
 
   <div id="modal">
     <div class="mhandle"></div>
-    <div id="mtitle" style="font-family:'Playfair Display',serif;font-size:20px;margin-bottom:4px;"></div>
-    <div id="mdate" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;"></div>
-    <div class="mlabel" id="ml-v">Verse</div>
-    <div class="mtext italic" id="mv"></div>
-    <div style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);margin-top:4px;" id="mr"></div>
-    <div class="mlabel" id="ml-r">Reflection</div>
-    <div class="mtext" id="md"></div>
-    <div class="mlabel" id="ml-p">Prayer</div>
-    <div class="mtext" id="mp"></div>
-    <!-- EXPORT BUTTONS -->
-    <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;">
-      <button class="btn btn-sage" onclick="exportEntryPDF()" id="btn-pdf">📄 PDF</button>
-      <button class="btn btn-sage" onclick="exportEntryImage()" id="btn-img">🖼️ Image</button>
-      <button class="btn btn-ghost" onclick="closeModal()" id="mcbtn">Close</button>
+    <div id="mdate" style="font-family:'Jost',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-bottom:12px;"></div>
+
+    <!-- VIEW MODE -->
+    <div id="modal-view">
+      <div class="mlabel" id="ml-v">Verse</div>
+      <div class="mtext italic" id="mv" style="min-height:20px;">—</div>
+      <div style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:1px;color:var(--gold);margin-top:4px;" id="mr"></div>
+      <div class="mlabel" id="ml-r">Reflection</div>
+      <div class="mtext" id="md" style="min-height:20px;">—</div>
+      <div class="mlabel" id="ml-p">Prayer</div>
+      <div class="mtext" id="mp" style="min-height:20px;">—</div>
+      <!-- BUTTONS -->
+      <div style="display:flex;gap:8px;margin-top:20px;flex-wrap:wrap;">
+        <button class="btn btn-sage" onclick="startEditEntry()" style="flex:1;">✏️ Edit</button>
+        <button class="btn btn-ghost" onclick="exportEntryPDF()" style="flex:1;">📄 PDF</button>
+        <button class="btn btn-ghost" onclick="exportEntryImage()" style="flex:1;">🖼️ Img</button>
+        <button class="btn btn-ghost" onclick="closeModal()" style="flex:1;" id="mcbtn">Close</button>
+      </div>
     </div>
+
+    <!-- EDIT MODE -->
+    <div id="modal-edit" style="display:none;">
+      <div class="mlabel">Reflection</div>
+      <div class="editor-wrap" style="margin-bottom:12px;">
+        <div class="editor" id="edit-reflection" contenteditable="true" style="min-height:120px;"></div>
+      </div>
+      <div class="mlabel">Prayer</div>
+      <div class="editor-wrap" style="margin-bottom:16px;">
+        <div class="editor" id="edit-prayer" contenteditable="true" style="min-height:100px;"></div>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-sage" onclick="saveEditEntry()" style="flex:1;">💾 Save</button>
+        <button class="btn btn-ghost" onclick="cancelEditEntry()" style="flex:1;">Cancel</button>
+      </div>
+    </div>
+
     <div id="export-status" style="font-family:'Jost',sans-serif;font-size:11px;color:var(--sage);margin-top:8px;display:none;"></div>
   </div>
 </div>
@@ -1260,14 +1282,15 @@ function openEntry(id){
   var e=entries.find(function(x){return x.id===id;});
   if(!e)return;
   currentModalEntry=e;
-  document.getElementById('mdate').textContent=e.dlabel||e.date;
-  // Show mood if present
-  var mdateEl=document.getElementById('mdate');
-  mdateEl.innerHTML=(e.dlabel||e.date)+(e.mood?' &nbsp;<span style="font-size:12px;background:var(--sage-xl);border:1px solid var(--sage);border-radius:8px;padding:2px 8px;color:var(--sage);font-family:\'Jost\',sans-serif;letter-spacing:.5px;">'+e.mood+'</span>':'');
 
-  // Build verse display — per verse with ref label + number
-  var verseHtml='';
+  // Date + mood
+  document.getElementById('mdate').innerHTML=(e.dlabel||e.date)
+    +(e.mood?' &nbsp;<span style="font-size:12px;background:var(--sage-xl);border:1px solid var(--sage);border-radius:8px;padding:2px 8px;color:var(--sage);font-family:\'Jost\',sans-serif;letter-spacing:.5px;">'+e.mood+'</span>':'');
+
+  // Verse display — support old entries (no verses array) and new
+  var verseHtml='—';
   if(e.verses&&e.verses.length){
+    verseHtml='';
     e.verses.forEach(function(v){
       verseHtml+='<div style="margin-bottom:10px;">'
         +'<div style="font-family:\'Jost\',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--gold);text-transform:uppercase;margin-bottom:3px;">'+v.ref+'</div>'
@@ -1278,16 +1301,57 @@ function openEntry(id){
     verseHtml=e.verseHtml;
   } else if(e.verse){
     verseHtml=e.verse;
-  } else {
-    verseHtml='—';
   }
+
   document.getElementById('mv').innerHTML=verseHtml;
   document.getElementById('mr').textContent=e.ref||'';
   document.getElementById('md').innerHTML=e.reflection||'—';
   document.getElementById('mp').innerHTML=e.prayer||'—';
+
+  // Show view mode
+  document.getElementById('modal-view').style.display='block';
+  document.getElementById('modal-edit').style.display='none';
   document.getElementById('moverlay').classList.add('show');
 }
-function closeModal(){document.getElementById('moverlay').classList.remove('show');}
+
+function closeModal(){
+  document.getElementById('moverlay').classList.remove('show');
+  document.getElementById('modal-view').style.display='block';
+  document.getElementById('modal-edit').style.display='none';
+}
+
+function startEditEntry(){
+  if(!currentModalEntry) return;
+  document.getElementById('edit-reflection').innerHTML=currentModalEntry.reflection||'';
+  document.getElementById('edit-prayer').innerHTML=currentModalEntry.prayer||'';
+  document.getElementById('modal-view').style.display='none';
+  document.getElementById('modal-edit').style.display='block';
+}
+
+function cancelEditEntry(){
+  document.getElementById('modal-view').style.display='block';
+  document.getElementById('modal-edit').style.display='none';
+}
+
+function saveEditEntry(){
+  if(!currentModalEntry||!currentUser) return;
+  var rhtml=document.getElementById('edit-reflection').innerHTML.trim();
+  var phtml=document.getElementById('edit-prayer').innerHTML.trim();
+  currentModalEntry.reflection=rhtml;
+  currentModalEntry.prayer=phtml;
+  // Update Firestore
+  userCol('entries').doc(String(currentModalEntry.id)).update({reflection:rhtml,prayer:phtml})
+    .then(function(){ syncBar('✓ Updated'); });
+  // Update local
+  var idx=entries.findIndex(function(e){return e.id===currentModalEntry.id;});
+  if(idx!==-1){ entries[idx].reflection=rhtml; entries[idx].prayer=phtml; }
+  // Refresh modal view
+  document.getElementById('md').innerHTML=rhtml||'—';
+  document.getElementById('mp').innerHTML=phtml||'—';
+  document.getElementById('modal-view').style.display='block';
+  document.getElementById('modal-edit').style.display='none';
+  renderEntries();
+}
 
 // ============================================================
 // PDF / IMAGE EXPORT
@@ -1552,14 +1616,66 @@ function onChap(){
 
 function cKey(book,chap,ver){return book.replace(/ /g,'_')+'_'+chap+'_'+ver;}
 
+// Tagalog Bible book IDs for bible.helloao.org (Ang Dating Biblia 1905)
+var TGL_BOOK_IDS={
+  'Genesis':'GEN','Exodus':'EXO','Leviticus':'LEV','Numbers':'NUM','Deuteronomy':'DEU',
+  'Joshua':'JOS','Judges':'JDG','Ruth':'RUT','1 Samuel':'1SA','2 Samuel':'2SA',
+  '1 Kings':'1KI','2 Kings':'2KI','1 Chronicles':'1CH','2 Chronicles':'2CH',
+  'Ezra':'EZR','Nehemiah':'NEH','Esther':'EST','Job':'JOB','Psalms':'PSA',
+  'Proverbs':'PRO','Ecclesiastes':'ECC','Song of Solomon':'SNG','Isaiah':'ISA',
+  'Jeremiah':'JER','Lamentations':'LAM','Ezekiel':'EZK','Daniel':'DAN',
+  'Hosea':'HOS','Joel':'JOL','Amos':'AMO','Obadiah':'OBA','Jonah':'JON',
+  'Micah':'MIC','Nahum':'NAM','Habakkuk':'HAB','Zephaniah':'ZEP','Haggai':'HAG',
+  'Zechariah':'ZEC','Malachi':'MAL','Matthew':'MAT','Mark':'MRK','Luke':'LUK',
+  'John':'JHN','Acts':'ACT','Romans':'ROM','1 Corinthians':'1CO','2 Corinthians':'2CO',
+  'Galatians':'GAL','Ephesians':'EPH','Philippians':'PHP','Colossians':'COL',
+  '1 Thessalonians':'1TH','2 Thessalonians':'2TH','1 Timothy':'1TI','2 Timothy':'2TI',
+  'Titus':'TIT','Philemon':'PHM','Hebrews':'HEB','James':'JAS','1 Peter':'1PE',
+  '2 Peter':'2PE','1 John':'1JN','2 John':'2JN','3 John':'3JN','Jude':'JUD',
+  'Revelation':'REV'
+};
+
 function loadChapter(book,chap){
   var wrap=document.getElementById('bview');
   var key=cKey(book,chap,bVer);
   if(bCache[key]){renderChap(book,chap,bCache[key],true);return;}
-
   wrap.innerHTML='<div class="bible-msg"><span class="spin">✦</span> Loading…</div>';
 
-  // Fetch from bible-api.com (KJV, ASV, WEB, BBE all supported)
+  if(bVer==='tgl'){
+    // Use bible.helloao.org — Tagalog Ang Dating Biblia
+    var bookId=TGL_BOOK_IDS[book];
+    if(!bookId){
+      wrap.innerHTML='<div class="bible-msg">⚠️ Book not found in Tagalog version.</div>';
+      return;
+    }
+    fetch('https://bible.helloao.org/api/tgl_adb/'+bookId+'/'+chap+'.json')
+      .then(function(r){if(!r.ok)throw new Error('http '+r.status);return r.json();})
+      .then(function(data){
+        if(!data.verses||!data.verses.length)throw new Error('empty');
+        var verses=data.verses.map(function(v){
+          // helloao format: verse.number and verse.content (array of parts)
+          var text='';
+          if(v.content){
+            v.content.forEach(function(c){
+              if(typeof c==='string') text+=c;
+              else if(c.text) text+=c.text;
+              else if(c.verses) c.verses.forEach(function(vv){if(vv.text)text+=vv.text;});
+            });
+          } else if(v.text){ text=v.text; }
+          return{n:v.number||v.verse,t:text.trim()};
+        });
+        bCache[key]=verses;
+        try{localStorage.setItem(lsKey('bc'),JSON.stringify(bCache));}catch(e){}
+        renderChap(book,chap,verses,false);
+      })
+      .catch(function(err){
+        console.error('TGL fetch error:',err);
+        wrap.innerHTML='<div class="bible-msg">📡 '+(lang==='en'?'Could not load Tagalog Bible. Check internet.':'Hindi ma-load ang Tagalog Bibliya.')+'</div>';
+      });
+    return;
+  }
+
+  // English versions via bible-api.com
   var fetchVer=bVer;
   var slug=book.toLowerCase().replace(/ /g,'+');
   fetch('https://bible-api.com/'+slug+'+'+chap+'?translation='+fetchVer)
@@ -1579,7 +1695,7 @@ function loadChapter(book,chap){
 function renderChap(book,chap,verses,cached){
   var wrap=document.getElementById('bview');
   var bname=book;
-  var vlabel=bVer==='kjv'?'King James Version':bVer==='asv'?'American Standard Version':bVer==='web'?'World English Bible':bVer==='bbe'?'Bible in Basic English':bVer.toUpperCase();
+  var vlabel=bVer==='kjv'?'King James Version':bVer==='asv'?'American Standard Version':bVer==='web'?'World English Bible':bVer==='bbe'?'Bible in Basic English':bVer==='tgl'?'Ang Dating Biblia (Tagalog)':bVer.toUpperCase();
   var html='<div class="chapter-box">'
     +'<div class="chapter-head"><div class="chapter-head-title">'+bname+' '+chap+'</div>'
     +'<div class="chapter-head-sub">'+vlabel+(cached?'<span class="cached-dot"></span>':'')+'</div></div>'
