@@ -2213,8 +2213,9 @@ var generatingDaily = false;
 function generateDailyAI(verseText, verseRef){
   if(generatingDaily) return;
 
-  // Cache key — regenerate once per day per lang
-  var cacheKey = lsKey('daily_ai_v2_'+new Date().toDateString()+'_'+lang);
+  // Cache key includes the actual verse ref — guarantees it matches Today's verse
+  var safeRef = verseRef.replace(/[^a-zA-Z0-9]/g,'_');
+  var cacheKey = lsKey('daily_ai_v3_'+safeRef+'_'+lang);
   var cached = null;
   try { cached = JSON.parse(localStorage.getItem(cacheKey)||'null'); } catch(e){}
   if(cached){
