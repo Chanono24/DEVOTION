@@ -1623,6 +1623,19 @@ function onChap(){
 
 function cKey(book,chap,ver){return book.replace(/ /g,'_')+'_'+chap+'_'+ver;}
 
+// Get verse text from cache — prefers tgl, falls back to kjv
+function getVerseText(book,chap,vn){
+  var versions=['tgl','kjv','asv','web','bbe'];
+  for(var i=0;i<versions.length;i++){
+    var ck=book.replace(/ /g,'_')+'_'+chap+'_'+versions[i];
+    if(bCache[ck]){
+      var found=bCache[ck].find(function(x){return String(x.n)===String(vn)||x.n===parseInt(vn);});
+      if(found&&found.t) return found.t;
+    }
+  }
+  return '';
+}
+
 // Book numbers for api.getbible.net/v2/tagalog (1=Genesis...66=Revelation)
 var TGL_BOOK_IDS={
   'Genesis':1,'Exodus':2,'Leviticus':3,'Numbers':4,'Deuteronomy':5,
@@ -1836,13 +1849,8 @@ function renderHighlightsTab(){
       +'<div class="hl-tab-ref">'+g.book+' '+g.chap+'</div>';
     g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
       var dotClass='hl-dot-'+v.color;
-      // Try to get verse text from cache
-      var cacheKey=g.book.replace(/ /g,'_')+'_'+g.chap+'_kjv';
-      var vtext='';
-      if(bCache[cacheKey]){
-        var found=bCache[cacheKey].find(function(x){return x.n===parseInt(v.n)||String(x.n)===String(v.n);});
-        if(found)vtext=found.t;
-      }
+      // Try to get verse text from cache — checks tgl, kjv, etc.
+      var vtext=getVerseText(g.book,g.chap,v.n);
       html+='<div class="hl-tab-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--linen);">'
         +'<span class="hl-tab-dot '+dotClass+'"></span>'
         +'<div class="hl-tab-body">'
@@ -1992,12 +2000,7 @@ function openFlashcards(){
     var vn=parts[parts.length-1];
     var ch=parts[parts.length-2];
     var bk=parts.slice(0,parts.length-2).join(' ');
-    var cacheKey=bk.replace(/ /g,'_')+'_'+ch+'_kjv';
-    var vtext='';
-    if(bCache[cacheKey]){
-      var found=bCache[cacheKey].find(function(x){return String(x.n)===String(vn);});
-      if(found) vtext=found.t;
-    }
+    var vtext=getVerseText(bk,ch,vn);
     if(vtext) fcCards.push({ref:bk+' '+ch+':'+vn, text:vtext, got:false});
   });
 
@@ -2082,12 +2085,7 @@ function openHighlightPicker(){
     var bk=parts.slice(0,parts.length-2).join(' ');
     var gkey=bk+'__'+ch;
     if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
-    var cacheKey=bk.replace(/ /g,'_')+'_'+ch+'_kjv';
-    var vtext='';
-    if(bCache[cacheKey]){
-      var found=bCache[cacheKey].find(function(x){return String(x.n)===String(vn);});
-      if(found)vtext=found.t;
-    }
+    var vtext=getVerseText(bk,ch,vn);
     grouped[gkey].verses.push({n:vn,color:hlData[k],key:k,text:vtext});
   });
   var html='';
