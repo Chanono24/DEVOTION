@@ -583,6 +583,7 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
           <button class="hl-view-btn active" id="hl-view-list" onclick="switchHLView('list',this)">Highlights</button>
           <button class="hl-view-btn" id="hl-view-stats" onclick="switchHLView('stats',this)">📊 Stats</button>
           <button class="hl-view-btn" onclick="openFlashcards()">🃏 Quiz</button>
+          <button class="hl-view-btn" onclick="exportHighlightsPDF()" style="color:var(--rose);border-color:var(--rose);">📄 PDF</button>
         </div>
       </div>
       <div id="hllist"></div>
@@ -1431,6 +1432,85 @@ function exportEntryImage(){
   }).catch(function(err){
     document.body.removeChild(tmp);
     status.textContent='⚠️ Error: '+err.message;
+  });
+}
+
+// ============================================================
+// HIGHLIGHTS PDF EXPORT
+// ============================================================
+function exportHighlightsPDF(){
+  var keys=Object.keys(hlData);
+  if(!keys.length){ alert('Wala pang highlights!'); return; }
+
+  // Group by book+chap
+  var grouped={};
+  keys.forEach(function(k){
+    var parts=k.split('_');
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var gkey=bk+'__'+ch;
+    if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
+    var txt=getVerseText(bk,ch,vn);
+    grouped[gkey].verses.push({n:vn,text:txt,color:hlData[k]});
+  });
+
+  // Color map
+  var colors={hl1:'#F5C842',hl2:'#6DBF82',hl3:'#E8A0A0',hl4:'#85AECF'};
+
+  // Build HTML
+  var html='<div id="hl-export-content" style="font-family:Georgia,serif;background:#FAF7F2;padding:40px;width:600px;box-sizing:border-box;color:#3A3530;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:2px solid #D4C9B8;padding-bottom:16px;">'
+    +'<div style="font-size:22px;font-family:Georgia,serif;color:#3A3530;">✦ My Highlights</div>'
+    +'<div style="font-size:11px;font-family:Arial,sans-serif;letter-spacing:1px;color:#8C8070;">'+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'</div>'
+    +'</div>';
+
+  Object.keys(grouped).sort().forEach(function(gk){
+    var g=grouped[gk];
+    html+='<div style="margin-bottom:20px;">'
+      +'<div style="font-size:11px;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#7A9E8A;margin-bottom:10px;">'+g.book+' '+g.chap+'</div>';
+    g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
+      var c=colors[v.color]||'#F5C842';
+      html+='<div style="display:flex;gap:10px;margin-bottom:10px;padding:10px 14px;background:#fff;border-radius:8px;border-left:4px solid '+c+';">'
+        +'<div style="font-size:10px;font-family:Arial,sans-serif;color:#8C8070;min-width:20px;margin-top:2px;">'+v.n+'</div>'
+        +'<div style="font-size:15px;font-style:italic;line-height:1.7;color:#3A3530;">'+(v.text||'(text not loaded)')+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  });
+
+  html+='<div style="margin-top:24px;border-top:1px solid #DDD8CE;padding-top:12px;font-size:10px;font-family:Arial,sans-serif;color:#B0A898;text-align:center;">Daily Devotion App ✦ My Highlights</div>'
+    +'</div>';
+
+  // Render with html2canvas
+  var tmp=document.createElement('div');
+  tmp.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  tmp.innerHTML=html;
+  document.body.appendChild(tmp);
+  var el=tmp.querySelector('#hl-export-content');
+
+  syncBar('📄 Generating PDF…');
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#FAF7F2'}).then(function(canvas){
+    document.body.removeChild(tmp);
+    var imgData=canvas.toDataURL('image/jpeg',0.95);
+    var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pdfW=pdf.internal.pageSize.getWidth();
+    var pdfH=pdf.internal.pageSize.getHeight();
+    var ratio=canvas.width/canvas.height;
+    var imgW=pdfW-20;
+    var imgH=imgW/ratio;
+    var y=10;
+    // Split into pages if needed
+    while(y<imgH+10){
+      if(y>10) pdf.addPage();
+      pdf.addImage(imgData,'JPEG',10,10-(y-10),imgW,imgH);
+      y+=pdfH-20;
+    }
+    pdf.save('my-highlights-'+new Date().toISOString().slice(0,10)+'.pdf');
+    syncBar('✓ PDF downloaded!');
+  }).catch(function(err){
+    document.body.removeChild(tmp);
+    syncBar('⚠️ Error: '+err.message, false);
   });
 }
 
