@@ -925,8 +925,14 @@ function loadUserData(){
   // Load highlights from localStorage (keyed by uid)
   try{ hlData=JSON.parse(localStorage.getItem(lsKey('hl'))||'{}'); }catch(e){ hlData={}; }
   try{ bCache=JSON.parse(localStorage.getItem(lsKey('bc'))||'{}'); }catch(e){ bCache={}; }
-  // Acts prayers
-  try{ /* rendered on tab open */ }catch(e){}
+
+  // Render everything now that user data is loaded
+  renderAll();
+  renderHighlightsTab();
+
+  // Load reminder time
+  var sr2=localStorage.getItem(lsKey('dr'));
+  if(sr2){ var rt2=document.getElementById('remtime'); if(rt2) rt2.value=sr2; }
 }
 
 function signInWithGoogle(){
@@ -982,6 +988,7 @@ function selectMood(btn, mood){
   if(selectedMood===mood){ selectedMood=''; } // toggle off
   else { btn.classList.add('selected'); selectedMood=mood; }
 }
+var verseRows = [];
 var verseRowCounter = 0;
 
 function initWriteBooks(){
@@ -1777,9 +1784,6 @@ function openBiblePicker(){
   switchTab('bible');
 }
 
-// Highlight storage: {bookChapVer_n: 'hl1'|'hl2'...}
-var hlData={};
-try{hlData=JSON.parse(localStorage.getItem(lsKey('hl'))||'{}');}catch(e){}
 var curHL='hl1';
 
 function setHL(color){
@@ -2515,12 +2519,11 @@ function openBibleFromPlan(book, chap){
 // ============================================================
 // INIT
 // ============================================================
-var sr=localStorage.getItem(lsKey('dr'));
-if(sr)document.getElementById('remtime').value=sr;
+var sr=localStorage.getItem('dr');
+if(sr){ var rt=document.getElementById('remtime'); if(rt) rt.value=sr; }
 initBooks();
 initWriteBooks();
-renderAll();
-renderHighlightsTab();
+// renderAll and renderHighlightsTab called after login via loadUserData
 
 // Safety net - re-render after DOM fully settled
 setTimeout(function(){
