@@ -583,7 +583,7 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
           <button class="hl-view-btn active" id="hl-view-list" onclick="switchHLView('list',this)">Highlights</button>
           <button class="hl-view-btn" id="hl-view-stats" onclick="switchHLView('stats',this)">📊 Stats</button>
           <button class="hl-view-btn" onclick="openFlashcards()">🃏 Quiz</button>
-          <button class="hl-view-btn" onclick="exportHighlightsPDF()" style="color:var(--rose);border-color:var(--rose);">📄 PDF</button>
+          <button class="hl-view-btn" onclick="openHLPDFPicker()" style="color:var(--rose);border-color:var(--rose);">📄 PDF</button>
         </div>
       </div>
       <div id="hllist"></div>
@@ -745,6 +745,27 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
       <button class="btn btn-sage" onclick="addSelectedHighlights()">✓ Idagdag ang Napili</button>
       <button class="btn btn-ghost" onclick="closeHLPicker()">Cancel</button>
     </div>
+  </div>
+</div>
+
+<!-- PDF PICKER MODAL -->
+<div id="hl-pdf-overlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999;align-items:flex-end;justify-content:center;" onclick="if(event.target===this)closeHLPDFPicker()">
+  <div style="background:var(--cream);border-radius:24px 24px 0 0;padding:20px;width:100%;max-height:85vh;overflow-y:auto;box-sizing:border-box;">
+    <div style="width:36px;height:4px;background:var(--linen);border-radius:2px;margin:0 auto 16px;"></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px;">
+      <div style="font-family:'Playfair Display',serif;font-size:18px;">📄 Export Highlights</div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="hlPDFSelectAll(true)" style="font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;background:none;border:1px solid var(--sage);color:var(--sage);border-radius:10px;padding:4px 10px;cursor:pointer;">All</button>
+        <button onclick="hlPDFSelectAll(false)" style="font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;background:none;border:1px solid var(--linen);color:var(--stone);border-radius:10px;padding:4px 10px;cursor:pointer;">None</button>
+      </div>
+    </div>
+    <div style="font-family:'Jost',sans-serif;font-size:11px;color:var(--stone);margin-bottom:16px;">Piliin ang mga verse na isasama sa PDF</div>
+    <div id="hl-pdf-list"></div>
+    <div style="display:flex;gap:8px;margin-top:16px;">
+      <button class="btn btn-sage" style="flex:1;" onclick="generateHLPDF()">📄 I-export ang Napili</button>
+      <button class="btn btn-ghost" onclick="closeHLPDFPicker()">Cancel</button>
+    </div>
+    <div id="hl-pdf-status" style="font-family:'Jost',sans-serif;font-size:11px;color:var(--sage);margin-top:8px;text-align:center;display:none;"></div>
   </div>
 </div>
 
@@ -1429,6 +1450,136 @@ function exportEntryImage(){
     link.click();
     status.textContent='✓ Image downloaded!';
     setTimeout(function(){status.style.display='none';},3000);
+  }).catch(function(err){
+    document.body.removeChild(tmp);
+    status.textContent='⚠️ Error: '+err.message;
+  });
+}
+
+// ============================================================
+// HIGHLIGHTS PDF PICKER
+// ============================================================
+function openHLPDFPicker(){
+  var keys=Object.keys(hlData);
+  if(!keys.length){ alert('Wala pang highlights!'); return; }
+
+  var grouped={};
+  keys.forEach(function(k){
+    var parts=k.split('_');
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var gkey=bk+'__'+ch;
+    if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
+    var txt=getVerseText(bk,ch,vn);
+    grouped[gkey].verses.push({n:vn,text:txt,color:hlData[k],key:k});
+  });
+
+  var dotColors={hl1:'#F5C842',hl2:'#6DBF82',hl3:'#E8A0A0',hl4:'#85AECF'};
+  var html='';
+  Object.keys(grouped).sort().forEach(function(gk){
+    var g=grouped[gk];
+    html+='<div style="margin-bottom:16px;">'
+      +'<div style="font-family:\'Jost\',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--sage);text-transform:uppercase;margin-bottom:8px;">'+g.book+' '+g.chap+'</div>';
+    g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
+      var c=dotColors[v.color]||'#ccc';
+      var preview=v.text?v.text.substring(0,70)+'…':'(text not loaded)';
+      html+='<label style="display:flex;align-items:flex-start;gap:10px;padding:10px 12px;background:#FDFAF6;border:1.5px solid var(--linen);border-radius:10px;margin-bottom:6px;cursor:pointer;">'
+        +'<input type="checkbox" class="hl-pdf-cb" data-key="'+v.key+'" checked style="margin-top:4px;accent-color:var(--sage);flex-shrink:0;">'
+        +'<div style="flex:1;">'
+        +'<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:'+c+';margin-right:6px;vertical-align:middle;"></span>'
+        +'<span style="font-family:\'Jost\',sans-serif;font-size:9px;color:var(--stone);letter-spacing:1px;">'+g.book+' '+g.chap+':'+v.n+'</span><br>'
+        +'<span style="font-family:\'EB Garamond\',serif;font-size:14px;font-style:italic;color:var(--ink);">'+preview+'</span>'
+        +'</div></label>';
+    });
+    html+='</div>';
+  });
+
+  document.getElementById('hl-pdf-list').innerHTML=html;
+  document.getElementById('hl-pdf-status').style.display='none';
+  document.getElementById('hl-pdf-overlay').style.display='flex';
+}
+
+function closeHLPDFPicker(){
+  document.getElementById('hl-pdf-overlay').style.display='none';
+}
+
+function hlPDFSelectAll(val){
+  document.querySelectorAll('.hl-pdf-cb').forEach(function(cb){ cb.checked=val; });
+}
+
+function generateHLPDF(){
+  var checked=document.querySelectorAll('.hl-pdf-cb:checked');
+  if(!checked.length){ alert('Walang napiling verse.'); return; }
+
+  // Build selected keys set
+  var selectedKeys={};
+  checked.forEach(function(cb){ selectedKeys[cb.dataset.key]=true; });
+
+  // Group selected
+  var grouped={};
+  Object.keys(selectedKeys).forEach(function(k){
+    var parts=k.split('_');
+    var vn=parts[parts.length-1];
+    var ch=parts[parts.length-2];
+    var bk=parts.slice(0,parts.length-2).join(' ');
+    var gkey=bk+'__'+ch;
+    if(!grouped[gkey])grouped[gkey]={book:bk,chap:ch,verses:[]};
+    var txt=getVerseText(bk,ch,vn);
+    grouped[gkey].verses.push({n:vn,text:txt,color:hlData[k]});
+  });
+
+  var colors={hl1:'#F5C842',hl2:'#6DBF82',hl3:'#E8A0A0',hl4:'#85AECF'};
+  var html='<div id="hl-export-content" style="font-family:Georgia,serif;background:#FAF7F2;padding:40px;width:600px;box-sizing:border-box;color:#3A3530;">'
+    +'<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:24px;border-bottom:2px solid #D4C9B8;padding-bottom:16px;">'
+    +'<div style="font-size:22px;font-family:Georgia,serif;">✦ My Highlights</div>'
+    +'<div style="font-size:11px;font-family:Arial,sans-serif;letter-spacing:1px;color:#8C8070;">'+new Date().toLocaleDateString('en-US',{year:'numeric',month:'long',day:'numeric'})+'</div>'
+    +'</div>';
+
+  Object.keys(grouped).sort().forEach(function(gk){
+    var g=grouped[gk];
+    html+='<div style="margin-bottom:20px;">'
+      +'<div style="font-size:11px;font-family:Arial,sans-serif;letter-spacing:2px;text-transform:uppercase;color:#7A9E8A;margin-bottom:10px;">'+g.book+' '+g.chap+'</div>';
+    g.verses.sort(function(a,b){return parseInt(a.n)-parseInt(b.n);}).forEach(function(v){
+      var c=colors[v.color]||'#F5C842';
+      html+='<div style="display:flex;gap:10px;margin-bottom:10px;padding:12px 14px;background:#fff;border-radius:8px;border-left:4px solid '+c+';">'
+        +'<div style="font-size:11px;font-family:Arial,sans-serif;color:#8C8070;min-width:20px;padding-top:2px;">'+v.n+'</div>'
+        +'<div style="font-size:16px;font-style:italic;line-height:1.75;color:#3A3530;">'+(v.text||'(text not loaded)')+'</div>'
+        +'</div>';
+    });
+    html+='</div>';
+  });
+
+  html+='<div style="margin-top:24px;border-top:1px solid #DDD8CE;padding-top:12px;font-size:10px;font-family:Arial,sans-serif;color:#B0A898;text-align:center;">Daily Devotion ✦ My Highlights</div></div>';
+
+  var status=document.getElementById('hl-pdf-status');
+  status.style.display='block';
+  status.textContent='⏳ Generating PDF…';
+
+  var tmp=document.createElement('div');
+  tmp.style.cssText='position:fixed;left:-9999px;top:0;z-index:-1;';
+  tmp.innerHTML=html;
+  document.body.appendChild(tmp);
+  var el=tmp.querySelector('#hl-export-content');
+
+  html2canvas(el,{scale:2,useCORS:true,backgroundColor:'#FAF7F2'}).then(function(canvas){
+    document.body.removeChild(tmp);
+    var imgData=canvas.toDataURL('image/jpeg',0.95);
+    var pdf=new window.jspdf.jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+    var pdfW=pdf.internal.pageSize.getWidth();
+    var pdfH=pdf.internal.pageSize.getHeight();
+    var imgW=pdfW-20;
+    var imgH=(canvas.height/canvas.width)*imgW;
+    var y=0;
+    var pageH=pdfH-20;
+    while(y<imgH){
+      if(y>0) pdf.addPage();
+      pdf.addImage(imgData,'JPEG',10,10-(y*(pdfW-20)/imgW*0),imgW,imgH);
+      y+=pageH;
+    }
+    pdf.save('highlights-'+new Date().toISOString().slice(0,10)+'.pdf');
+    status.textContent='✓ PDF downloaded!';
+    setTimeout(function(){ closeHLPDFPicker(); },1500);
   }).catch(function(err){
     document.body.removeChild(tmp);
     status.textContent='⚠️ Error: '+err.message;
