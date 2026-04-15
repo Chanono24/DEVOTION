@@ -203,6 +203,16 @@ body{font-family:'Jost',sans-serif;color:var(--ink);}
 .hl-btn.blue{background:#70A8FF;}
 .hl-btn.clear{background:var(--linen);font-size:10px;display:flex;align-items:center;justify-content:center;color:var(--stone);width:auto;padding:0 8px;border-radius:10px;font-family:'Jost',sans-serif;}
 .hl-label{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1.5px;color:var(--stone);text-transform:uppercase;margin-right:4px;}
+/* NOTES */
+.note-filter-btn{font-family:'Jost',sans-serif;font-size:10px;letter-spacing:.5px;padding:5px 12px;border:1.5px solid var(--linen);border-radius:20px;background:#fff;color:var(--stone);cursor:pointer;white-space:nowrap;transition:all .2s;flex-shrink:0;}
+.note-filter-btn.active{background:var(--sage);border-color:var(--sage);color:#fff;}
+.note-card{background:#fff;border:1px solid var(--linen);border-radius:14px;padding:14px 16px;margin-bottom:10px;cursor:pointer;transition:all .2s;}
+.note-card:active{transform:scale(.99);}
+.note-card-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px;}
+.note-card-title{font-family:'Playfair Display',serif;font-size:17px;color:var(--ink);}
+.note-card-cat{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--sage);background:var(--sage-xl);padding:2px 8px;border-radius:8px;}
+.note-card-date{font-family:'Jost',sans-serif;font-size:9px;letter-spacing:1px;color:var(--stone);margin-bottom:6px;}
+.note-card-preview{font-family:'EB Garamond',serif;font-size:15px;color:var(--bark);line-height:1.6;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;}
 /* READING PLAN */
 .plan-card{background:#fff;border:1.5px solid var(--linen);border-radius:16px;padding:16px 18px;margin-bottom:10px;cursor:pointer;transition:all .2s;}
 .plan-card:active{transform:scale(.98);}
@@ -641,6 +651,64 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
       </div>
     </div>
 
+    <!-- NOTES -->
+    <div class="tab" id="tab-notes">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div class="clabel" style="margin:0;">📝 Notes</div>
+        <button class="btn btn-sage" onclick="openNewNote()" style="padding:8px 16px;font-size:11px;">+ New Note</button>
+      </div>
+
+      <!-- NOTE EDITOR (hidden by default) -->
+      <div id="note-editor-wrap" style="display:none;margin-bottom:16px;">
+        <div class="card" style="padding:16px;">
+          <input type="text" id="note-title-input" placeholder="Title (e.g. Sunday Mass, Bible Study...)"
+            style="width:100%;box-sizing:border-box;border:none;border-bottom:1.5px solid var(--linen);background:transparent;font-family:'Playfair Display',serif;font-size:18px;color:var(--ink);outline:none;padding-bottom:8px;margin-bottom:12px;">
+          <div style="display:flex;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <select id="note-category" style="font-family:'Jost',sans-serif;font-size:11px;letter-spacing:.5px;border:1.5px solid var(--linen);border-radius:10px;padding:5px 10px;background:#fff;color:var(--stone);outline:none;cursor:pointer;">
+              <option value="mass">⛪ Mass</option>
+              <option value="bible">📖 Bible Study</option>
+              <option value="sermon">🎙️ Sermon</option>
+              <option value="prayer">🙏 Prayer</option>
+              <option value="personal">✏️ Personal</option>
+            </select>
+            <input type="date" id="note-date-input"
+              style="font-family:'Jost',sans-serif;font-size:11px;border:1.5px solid var(--linen);border-radius:10px;padding:5px 10px;background:#fff;color:var(--stone);outline:none;">
+          </div>
+          <div class="editor-wrap">
+            <div class="editor-toolbar">
+              <button class="tb-btn" onmousedown="fmt(event,'bold')"><b>B</b></button>
+              <button class="tb-btn" onmousedown="fmt(event,'italic')"><i>I</i></button>
+              <button class="tb-btn" onmousedown="fmt(event,'insertUnorderedList')">• List</button>
+              <button class="tb-btn" onmousedown="fmt(event,'insertOrderedList')">1. List</button>
+            </div>
+            <div class="editor" id="note-body" contenteditable="true" style="min-height:200px;"></div>
+          </div>
+          <div style="display:flex;gap:8px;margin-top:12px;">
+            <button class="btn btn-sage" onclick="saveNote()" style="flex:1;">💾 Save</button>
+            <button class="btn btn-ghost" onclick="cancelNote()" style="flex:1;">Cancel</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SEARCH -->
+      <div style="position:relative;margin-bottom:12px;" id="notes-search-wrap">
+        <input type="text" id="notes-search" oninput="renderNotes()" placeholder="🔍 Search notes…"
+          style="width:100%;box-sizing:border-box;padding:10px 14px;background:#fff;border:1.5px solid var(--linen);border-radius:12px;font-family:'Jost',sans-serif;font-size:13px;color:var(--ink);outline:none;">
+      </div>
+
+      <!-- CATEGORY FILTER -->
+      <div id="notes-filter" style="display:flex;gap:6px;margin-bottom:14px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none;">
+        <button class="note-filter-btn active" data-cat="all" onclick="filterNotes('all',this)">All</button>
+        <button class="note-filter-btn" data-cat="mass" onclick="filterNotes('mass',this)">⛪ Mass</button>
+        <button class="note-filter-btn" data-cat="bible" onclick="filterNotes('bible',this)">📖 Bible Study</button>
+        <button class="note-filter-btn" data-cat="sermon" onclick="filterNotes('sermon',this)">🎙️ Sermon</button>
+        <button class="note-filter-btn" data-cat="prayer" onclick="filterNotes('prayer',this)">🙏 Prayer</button>
+        <button class="note-filter-btn" data-cat="personal" onclick="filterNotes('personal',this)">✏️ Personal</button>
+      </div>
+
+      <div id="notes-list"></div>
+    </div>
+
   </div><!-- /content -->
 
   <!-- NAV -->
@@ -651,6 +719,7 @@ input[type=time]{width:100%;background:#FDFAF6;border:1.5px solid var(--linen);b
     <button class="nbtn" id="nav-prayer" onclick="switchTab('prayer')"><span class="nicon">🙏</span><span class="nlabel" id="nl-prayer">Prayer</span></button>
     <button class="nbtn" id="nav-bible" onclick="switchTab('bible')"><span class="nicon">📜</span><span class="nlabel" id="nl-bible">Bible</span></button>
     <button class="nbtn" id="nav-highlights" onclick="switchTab('highlights')"><span class="nicon">🌟</span><span class="nlabel" id="nl-highlights">Highlights</span></button>
+    <button class="nbtn" id="nav-notes" onclick="switchTab('notes')"><span class="nicon">📝</span><span class="nlabel">Notes</span></button>
     <button class="nbtn" id="nav-plan" onclick="switchTab('plan')"><span class="nicon">📅</span><span class="nlabel" id="nl-plan">Plan</span></button>
     <button class="nbtn" id="nav-alarm" onclick="switchTab('alarm')"><span class="nicon">🕊️</span><span class="nlabel" id="nl-alarm">Alarm</span></button>
   </div>
@@ -947,6 +1016,7 @@ function loadUserData(){
   // Load highlights from localStorage (keyed by uid)
   try{ hlData=JSON.parse(localStorage.getItem(lsKey('hl'))||'{}'); }catch(e){ hlData={}; }
   try{ bCache=JSON.parse(localStorage.getItem(lsKey('bc'))||'{}'); }catch(e){ bCache={}; }
+  loadNotes();
 
   // Render everything now that user data is loaded
   renderAll();
@@ -1802,6 +1872,7 @@ function switchTab(name){
   if(name==='write')initWriteBooks();
   if(name==='highlights')renderHighlightsTab();
   if(name==='plan')initPlanTab();
+  if(name==='notes')renderNotes();
   if(name==='prayer')initPrayerTab();
 }
 
@@ -2745,6 +2816,131 @@ function openBibleFromPlan(book, chap){
       if(chapSel){ chapSel.value=chap; chapSel.disabled=false; onChap(); }
     },100);
   }
+}
+
+// ============================================================
+// NOTES
+// ============================================================
+var notes = [];
+var notesFilter = 'all';
+var editingNoteId = null;
+
+var CAT_LABELS = {mass:'⛪ Mass', bible:'📖 Bible Study', sermon:'🎙️ Sermon', prayer:'🙏 Prayer', personal:'✏️ Personal'};
+
+function loadNotes(){
+  try{ notes=JSON.parse(localStorage.getItem(lsKey('notes'))||'[]'); }catch(e){ notes=[]; }
+}
+
+function saveNotes(){
+  try{ localStorage.setItem(lsKey('notes'),JSON.stringify(notes)); }catch(e){}
+  // Also save to Firestore
+  if(db&&currentUser){
+    userCol('notes_meta').doc('list').set({notes:notes});
+  }
+}
+
+function openNewNote(){
+  editingNoteId=null;
+  document.getElementById('note-title-input').value='';
+  document.getElementById('note-body').innerHTML='';
+  document.getElementById('note-category').value='mass';
+  document.getElementById('note-date-input').value=new Date().toISOString().slice(0,10);
+  document.getElementById('note-editor-wrap').style.display='block';
+  document.getElementById('notes-search-wrap').style.display='none';
+  document.getElementById('notes-filter').style.display='none';
+  document.getElementById('note-title-input').focus();
+}
+
+function cancelNote(){
+  document.getElementById('note-editor-wrap').style.display='none';
+  document.getElementById('notes-search-wrap').style.display='block';
+  document.getElementById('notes-filter').style.display='flex';
+  editingNoteId=null;
+}
+
+function saveNote(){
+  var title=document.getElementById('note-title-input').value.trim()||'Untitled';
+  var body=document.getElementById('note-body').innerHTML.trim();
+  var cat=document.getElementById('note-category').value;
+  var date=document.getElementById('note-date-input').value||new Date().toISOString().slice(0,10);
+  var bodyText=document.getElementById('note-body').innerText.trim();
+  if(!bodyText&&!title){ alert('Walang laman ang note.'); return; }
+
+  var dateLabel=new Date(date+'T00:00:00').toLocaleDateString('en-US',{weekday:'short',year:'numeric',month:'short',day:'numeric'});
+
+  if(editingNoteId){
+    var idx=notes.findIndex(function(n){return n.id===editingNoteId;});
+    if(idx!==-1){
+      notes[idx].title=title; notes[idx].body=body;
+      notes[idx].cat=cat; notes[idx].date=date; notes[idx].dateLabel=dateLabel;
+    }
+  } else {
+    notes.unshift({id:Date.now(),title:title,body:body,cat:cat,date:date,dateLabel:dateLabel});
+  }
+  saveNotes();
+  cancelNote();
+  renderNotes();
+  syncBar('✓ Note saved');
+}
+
+function editNote(id){
+  var n=notes.find(function(x){return x.id===id;});
+  if(!n)return;
+  editingNoteId=id;
+  document.getElementById('note-title-input').value=n.title||'';
+  document.getElementById('note-body').innerHTML=n.body||'';
+  document.getElementById('note-category').value=n.cat||'personal';
+  document.getElementById('note-date-input').value=n.date||new Date().toISOString().slice(0,10);
+  document.getElementById('note-editor-wrap').style.display='block';
+  document.getElementById('notes-search-wrap').style.display='none';
+  document.getElementById('notes-filter').style.display='none';
+  document.getElementById('note-title-input').focus();
+}
+
+function deleteNote(id){
+  if(!confirm('Delete this note?'))return;
+  notes=notes.filter(function(n){return n.id!==id;});
+  saveNotes();
+  renderNotes();
+}
+
+function filterNotes(cat, btn){
+  notesFilter=cat;
+  document.querySelectorAll('.note-filter-btn').forEach(function(b){b.classList.remove('active');});
+  btn.classList.add('active');
+  renderNotes();
+}
+
+function renderNotes(){
+  loadNotes();
+  var el=document.getElementById('notes-list');
+  if(!el)return;
+  var q=(document.getElementById('notes-search')?document.getElementById('notes-search').value:'').toLowerCase().trim();
+  var list=notes.filter(function(n){
+    if(notesFilter!=='all'&&n.cat!==notesFilter)return false;
+    if(q&&!(n.title&&n.title.toLowerCase().includes(q))&&!(n.body&&n.body.toLowerCase().includes(q)))return false;
+    return true;
+  });
+  if(!list.length){
+    el.innerHTML='<div class="empty-state">Wala pang notes. Mag-tap ng "+ New Note" para magsimula! ✦</div>';
+    return;
+  }
+  var html='';
+  list.forEach(function(n){
+    var preview=n.body?n.body.replace(/<[^>]+>/g,'').substring(0,100)+'…':'';
+    var catLabel=CAT_LABELS[n.cat]||n.cat||'';
+    html+='<div class="note-card" onclick="editNote('+n.id+')">'
+      +'<div class="note-card-top">'
+      +'<div class="note-card-title">'+( n.title||'Untitled')+'</div>'
+      +'<div style="display:flex;align-items:center;gap:6px;">'
+      +'<div class="note-card-cat">'+catLabel+'</div>'
+      +'<button onclick="event.stopPropagation();deleteNote('+n.id+')" style="background:none;border:none;color:var(--linen);font-size:16px;cursor:pointer;padding:0 2px;">✕</button>'
+      +'</div></div>'
+      +'<div class="note-card-date">'+( n.dateLabel||n.date||'')+'</div>'
+      +(preview?'<div class="note-card-preview">'+preview+'</div>':'')
+      +'</div>';
+  });
+  el.innerHTML=html;
 }
 
 // ============================================================
